@@ -1,0 +1,25 @@
+# Build outputs
+bin/
+obj/
+out/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.cache
+
+# NuGet
+*.nupkg
+packages/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+# Python SDK reference (submodule or temp)
+claude-agent-sdk-python/

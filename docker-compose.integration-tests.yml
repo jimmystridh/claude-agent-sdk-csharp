@@ -1,0 +1,67 @@
+# Docker Compose for integration tests
+#
+# Authentication (choose one):
+#   Option 1: Set ANTHROPIC_API_KEY in environment or .env file
+#   Option 2: Set CLAUDE_CODE_OAUTH_TOKEN in environment or .env file
+#             (Generate with: claude setup-token)
+#
+# Usage:
+#   # Create .env file with your credentials (see .env.example)
+#   cp .env.example .env
+#   # Edit .env with your API key or OAuth token
+#
+#   # Run all integration tests
+#   docker-compose -f docker-compose.integration-tests.yml up --build
+#
+#   # Run with specific test filter
+#   TEST_FILTER=TestOneshot docker-compose -f docker-compose.integration-tests.yml up --build
+#
+#   # Run interactively
+#   docker-compose -f docker-compose.integration-tests.yml run --rm tests bash
+#
+# Environment variables:
+#   ANTHROPIC_API_KEY      - Anthropic API key (starts with sk-ant-)
+#   CLAUDE_CODE_OAUTH_TOKEN - Claude Code OAuth token (for Pro/Max users)
+#   TEST_FILTER            - Filter tests by name pattern (optional)
+
+version: '3.8'
+
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.integration-tests
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Pass through auth - at least one must be set
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN:-}
+      - DOTNET_CLI_TELEMETRY_OPTOUT=1
+    command: >
+      sh -c "
+        # Validate authentication
+        if [ -z \"$ANTHROPIC_API_KEY\" ] && [ -z \"$CLAUDE_CODE_OAUTH_TOKEN\" ]; then
+          echo 'Error: Either ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN must be set'
+          echo ''
+          echo 'Options:'
+          echo '  1. Set ANTHROPIC_API_KEY in .env or environment'
+          echo '  2. Run \"claude setup-token\" locally, then set CLAUDE_CODE_OAUTH_TOKEN'
+          exit 1
+        fi
+
+        if [ -n \"${TEST_FILTER:-}\" ]; then
+          dotnet test ./tests/ih0.Claude.Agent.SDK.IntegrationTests/ -c Release --filter \"FullyQualifiedName~${TEST_FILTER}\" --logger \"console;verbosity=detailed\"
+        else
+          dotnet test ./tests/ih0.Claude.Agent.SDK.IntegrationTests/ -c Release --logger \"console;verbosity=normal\"
+        fi
+      "
+    # Limit resources to prevent runaway tests
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+    # Allow tests to run for up to 30 minutes
+    stop_grace_period: 30m

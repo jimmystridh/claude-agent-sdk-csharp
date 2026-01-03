@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ih0.Claude.Agent.SDK\ih0.Claude.Agent.SDK.csproj" />
+  </ItemGroup>
+
+</Project>

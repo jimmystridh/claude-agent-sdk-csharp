@@ -1,0 +1,77 @@
+# Dockerfile for running integration tests
+#
+# Authentication Options:
+#   Option 1: Anthropic API Key
+#     Set ANTHROPIC_API_KEY environment variable
+#
+#   Option 2: Claude Code OAuth Token (for Pro/Max users)
+#     Generate token locally: claude setup-token
+#     Set CLAUDE_CODE_OAUTH_TOKEN environment variable
+#
+# Usage:
+#   # Build the image
+#   docker build -f Dockerfile.integration-tests -t claude-sdk-csharp-tests .
+#
+#   # Run with API key
+#   docker run --rm \
+#     -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+#     claude-sdk-csharp-tests
+#
+#   # Run with OAuth token
+#   docker run --rm \
+#     -e CLAUDE_CODE_OAUTH_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN" \
+#     claude-sdk-csharp-tests
+#
+#   # Run with .env file
+#   docker run --rm --env-file .env claude-sdk-csharp-tests
+#
+#   # Run specific test
+#   docker run --rm --env-file .env claude-sdk-csharp-tests \
+#     dotnet test --filter "FullyQualifiedName~TestOneshot"
+#
+#   # Run with verbose output
+#   docker run --rm --env-file .env claude-sdk-csharp-tests \
+#     dotnet test --logger "console;verbosity=detailed"
+#
+#   # Interactive shell for debugging
+#   docker run --rm -it --env-file .env claude-sdk-csharp-tests bash
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+# Install Node.js (required for Claude CLI)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Claude CLI globally
+RUN npm install -g @anthropic-ai/claude-code
+
+# Create app directory
+WORKDIR /app
+
+# Copy Directory.Build.props first (defines shared properties like TargetFramework)
+COPY Directory.Build.props ./
+
+# Copy solution and project files for dependency caching
+COPY *.sln ./
+COPY src/ih0.Claude.Agent.SDK/*.csproj ./src/ih0.Claude.Agent.SDK/
+COPY tests/ih0.Claude.Agent.SDK.Tests/*.csproj ./tests/ih0.Claude.Agent.SDK.Tests/
+COPY tests/ih0.Claude.Agent.SDK.IntegrationTests/*.csproj ./tests/ih0.Claude.Agent.SDK.IntegrationTests/
+
+# Copy example project files (they use Directory.Build.props for TargetFramework)
+COPY examples/ ./examples/
+
+# Restore dependencies
+RUN dotnet restore
+
+# Copy source code
+COPY . .
+
+# Build the project
+RUN dotnet build -c Release
+
+# Verify Claude CLI is available
+RUN claude --version || echo "Claude CLI installation check"
+
+# Default command: run integration tests
+CMD ["dotnet", "test", "./tests/ih0.Claude.Agent.SDK.IntegrationTests/", "-c", "Release", "--logger", "console;verbosity=normal"]
