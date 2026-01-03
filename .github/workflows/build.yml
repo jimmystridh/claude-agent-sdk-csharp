@@ -22,10 +22,10 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore --configuration Release
 
     - name: Test
-      run: dotnet test tests/ih0.Claude.Agent.SDK.Tests --no-build --verbosity normal
+      run: dotnet test tests/ih0.Claude.Agent.SDK.Tests --no-build --configuration Release --verbosity normal
 
     - name: Restore tools
       run: dotnet tool restore
