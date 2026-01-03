@@ -46,10 +46,9 @@ await foreach (var message in ClaudeAgent.QueryAsync("What is 2 + 2?"))
 
 `ClaudeAgent.QueryAsync()` is a static async method for querying Claude Code. It returns an `IAsyncEnumerable<Message>` of response messages.
 
-```csharp
-using ih0.Claude.Agent.SDK;
-using ih0.Claude.Agent.SDK.Types;
-
+<!-- snippet: BasicUsage -->
+<a id='snippet-BasicUsage'></a>
+```cs
 // Simple query
 await foreach (var message in ClaudeAgent.QueryAsync("Hello Claude"))
 {
@@ -74,10 +73,14 @@ await foreach (var message in ClaudeAgent.QueryAsync("Tell me a joke", options))
     Console.WriteLine(message);
 }
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L16-L40' title='Snippet source file'>snippet source</a> | <a href='#snippet-BasicUsage' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ### Using Tools
 
-```csharp
+<!-- snippet: UsingTools -->
+<a id='snippet-UsingTools'></a>
+```cs
 var options = new ClaudeAgentOptionsBuilder()
     .AddAllowedTools("Read", "Write", "Bash")
     .WithPermissionMode(PermissionMode.AcceptEdits)  // auto-accept file edits
@@ -88,14 +91,20 @@ await foreach (var message in ClaudeAgent.QueryAsync("Create a hello.cs file", o
     // Process tool use and results
 }
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L45-L55' title='Snippet source file'>snippet source</a> | <a href='#snippet-UsingTools' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ### Working Directory
 
-```csharp
+<!-- snippet: WorkingDirectory -->
+<a id='snippet-WorkingDirectory'></a>
+```cs
 var options = new ClaudeAgentOptionsBuilder()
     .WithCwd("/path/to/project")
     .Build();
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L60-L64' title='Snippet source file'>snippet source</a> | <a href='#snippet-WorkingDirectory' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ## ClaudeAgentClient
 
@@ -103,9 +112,9 @@ var options = new ClaudeAgentOptionsBuilder()
 
 Unlike `ClaudeAgent.QueryAsync()`, `ClaudeAgentClient` additionally enables **custom tools** and **hooks**, both of which can be defined as C# methods.
 
-```csharp
-using ih0.Claude.Agent.SDK;
-
+<!-- snippet: ClientUsage -->
+<a id='snippet-ClientUsage'></a>
+```cs
 var options = new ClaudeAgentOptionsBuilder()
     .WithModel("claude-sonnet-4-20250514")
     .WithMaxTurns(5)
@@ -115,7 +124,7 @@ await using var client = new ClaudeAgentClient(options);
 await client.ConnectAsync();
 
 // Send a query
-await client.SendAsync("Hello, Claude!");
+await client.QueryAsync("Hello, Claude!");
 
 // Receive streaming response
 await foreach (var message in client.ReceiveMessagesAsync())
@@ -123,6 +132,8 @@ await foreach (var message in client.ReceiveMessagesAsync())
     Console.WriteLine(message);
 }
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L69-L86' title='Snippet source file'>snippet source</a> | <a href='#snippet-ClientUsage' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ### Custom Tools (as In-Process SDK MCP Servers)
 
@@ -134,47 +145,73 @@ For an end-to-end example, see [McpCalculator](examples/McpCalculator/Program.cs
 
 #### Creating a Simple Tool
 
-```csharp
-using ih0.Claude.Agent.SDK;
-using ih0.Claude.Agent.SDK.Mcp;
-using ih0.Claude.Agent.SDK.Types;
-
-// Define tools using the SdkMcpServer base class
-public class CalculatorServer : SdkMcpServer
+<!-- snippet: CustomToolsClass -->
+<a id='snippet-CustomToolsClass'></a>
+```cs
+// Define tools by implementing ISdkMcpServer
+public class CalculatorServer : ISdkMcpServer
 {
-    public override string Name => "calculator";
-    public override string Version => "1.0.0";
+    public string Name => "calculator";
+    public string Version => "1.0.0";
 
-    [Tool("add", "Add two numbers")]
-    public SdkMcpToolResult Add(double a, double b)
+    public Task<IReadOnlyList<SdkMcpToolDefinition>> ListToolsAsync(CancellationToken cancellationToken = default)
     {
-        return SdkMcpToolResult.Success($"{a + b}");
+        var tools = new List<SdkMcpToolDefinition>
+        {
+            new SdkMcpToolDefinition
+            {
+                Name = "add",
+                Description = "Add two numbers",
+                InputSchema = JsonDocument.Parse("""
+                    { "type": "object", "properties": { "a": {"type": "number"}, "b": {"type": "number"} }, "required": ["a", "b"] }
+                    """).RootElement
+            },
+            new SdkMcpToolDefinition
+            {
+                Name = "multiply",
+                Description = "Multiply two numbers",
+                InputSchema = JsonDocument.Parse("""
+                    { "type": "object", "properties": { "a": {"type": "number"}, "b": {"type": "number"} }, "required": ["a", "b"] }
+                    """).RootElement
+            }
+        };
+        return Task.FromResult<IReadOnlyList<SdkMcpToolDefinition>>(tools);
     }
 
-    [Tool("multiply", "Multiply two numbers")]
-    public SdkMcpToolResult Multiply(double a, double b)
+    public Task<SdkMcpToolResult> CallToolAsync(string name, JsonElement arguments, CancellationToken cancellationToken = default)
     {
-        return SdkMcpToolResult.Success($"{a * b}");
+        var a = arguments.GetProperty("a").GetDouble();
+        var b = arguments.GetProperty("b").GetDouble();
+        var result = name switch { "add" => a + b, "multiply" => a * b, _ => throw new ArgumentException($"Unknown: {name}") };
+        return Task.FromResult(new SdkMcpToolResult { Content = new[] { new SdkMcpTextContent { Text = result.ToString() } } });
     }
 }
+```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L259-L298' title='Snippet source file'>snippet source</a> | <a href='#snippet-CustomToolsClass' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
+<!-- snippet: CustomToolsUsage -->
+<a id='snippet-CustomToolsUsage'></a>
+```cs
 // Use it with Claude
 var calculator = new CalculatorServer();
 
 var options = new ClaudeAgentOptionsBuilder()
-    .AddMcpServer("calculator", new McpSdkServerConfig { Instance = calculator })
+    .AddMcpServer("calculator", new McpSdkServerConfig { Name = "calculator", Instance = calculator })
     .AddAllowedTools("mcp__calculator__add", "mcp__calculator__multiply")
     .Build();
 
 await using var client = new ClaudeAgentClient(options);
 await client.ConnectAsync();
-await client.SendAsync("What is 5 + 3?");
+await client.QueryAsync("What is 5 + 3?");
 
 await foreach (var message in client.ReceiveMessagesAsync())
 {
     Console.WriteLine(message);
 }
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L91-L108' title='Snippet source file'>snippet source</a> | <a href='#snippet-CustomToolsUsage' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 #### Benefits Over External MCP Servers
 
@@ -186,9 +223,11 @@ await foreach (var message in client.ReceiveMessagesAsync())
 
 #### Migration from External Servers
 
-```csharp
+<!-- snippet: MigrationExample -->
+<a id='snippet-MigrationExample'></a>
+```cs
 // BEFORE: External MCP server (separate process)
-var options = new ClaudeAgentOptionsBuilder()
+var optionsBefore = new ClaudeAgentOptionsBuilder()
     .AddMcpServer("calculator", new McpStdioServerConfig
     {
         Command = "dotnet",
@@ -199,24 +238,30 @@ var options = new ClaudeAgentOptionsBuilder()
 // AFTER: SDK MCP server (in-process)
 var calculator = new CalculatorServer();
 
-var options = new ClaudeAgentOptionsBuilder()
-    .AddMcpServer("calculator", new McpSdkServerConfig { Instance = calculator })
+var optionsAfter = new ClaudeAgentOptionsBuilder()
+    .AddMcpServer("calculator", new McpSdkServerConfig { Name = "calculator", Instance = calculator })
     .Build();
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L113-L129' title='Snippet source file'>snippet source</a> | <a href='#snippet-MigrationExample' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 #### Mixed Server Support
 
 You can use both SDK and external MCP servers together:
 
-```csharp
+<!-- snippet: MixedServers -->
+<a id='snippet-MixedServers'></a>
+```cs
 var options = new ClaudeAgentOptionsBuilder()
-    .AddMcpServer("internal", new McpSdkServerConfig { Instance = sdkServer })
+    .AddMcpServer("internal", new McpSdkServerConfig { Name = "internal", Instance = sdkServer })
     .AddMcpServer("external", new McpStdioServerConfig
     {
         Command = "external-server"
     })
     .Build();
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L136-L144' title='Snippet source file'>snippet source</a> | <a href='#snippet-MixedServers' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ### Hooks
 
@@ -224,32 +269,28 @@ A **hook** is a C# callback that the Claude Code _application_ (_not_ Claude) in
 
 For more examples, see [Hooks example](examples/Hooks/Program.cs).
 
-```csharp
-using ih0.Claude.Agent.SDK;
-using ih0.Claude.Agent.SDK.Types;
-
+<!-- snippet: HooksUsage -->
+<a id='snippet-HooksUsage'></a>
+```cs
 // Define a hook to validate Bash commands
-Task<HookOutput> CheckBashCommand(HookInput input, string? toolUseId, HookContext context)
+HookCallback CheckBashCommand = (HookInput input, string? toolUseId, HookContext context) =>
 {
-    if (input.ToolName != "Bash")
+    if (input is not PreToolUseHookInput preToolUse || preToolUse.ToolName != "Bash")
         return Task.FromResult(new HookOutput());
 
-    var command = input.ToolInput?.GetProperty("command").GetString() ?? "";
+    var command = preToolUse.ToolInput.GetProperty("command").GetString() ?? "";
 
     if (command.Contains("rm -rf"))
     {
         return Task.FromResult(new HookOutput
         {
-            HookSpecificOutput = new PreToolUseHookOutput
-            {
-                Decision = "deny",
-                Reason = "Dangerous command blocked"
-            }
+            Decision = "deny",
+            Reason = "Dangerous command blocked"
         });
     }
 
     return Task.FromResult(new HookOutput());
-}
+};
 
 var options = new ClaudeAgentOptionsBuilder()
     .AddAllowedTool("Bash")
@@ -259,6 +300,8 @@ var options = new ClaudeAgentOptionsBuilder()
 await using var client = new ClaudeAgentClient(options);
 // ...
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L149-L177' title='Snippet source file'>snippet source</a> | <a href='#snippet-HooksUsage' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ## Options Builder
 
@@ -283,7 +326,9 @@ var options = new ClaudeAgentOptionsBuilder()
 
 Use `ToBuilder()` to create a builder from existing options:
 
-```csharp
+<!-- snippet: ModifyingOptions -->
+<a id='snippet-ModifyingOptions'></a>
+```cs
 var baseOptions = new ClaudeAgentOptions
 {
     Model = "claude-sonnet-4-20250514",
@@ -295,6 +340,8 @@ var modifiedOptions = baseOptions.ToBuilder()
     .AddAllowedTool("Bash")
     .Build();
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L182-L193' title='Snippet source file'>snippet source</a> | <a href='#snippet-ModifyingOptions' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ## Configuration from appsettings.json
 
@@ -316,10 +363,9 @@ Load options from `IConfiguration`:
 }
 ```
 
-```csharp
-using ih0.Claude.Agent.SDK.Extensions;
-using Microsoft.Extensions.Configuration;
-
+<!-- snippet: ConfigurationUsage -->
+<a id='snippet-ConfigurationUsage'></a>
+```cs
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .Build();
@@ -328,19 +374,20 @@ var configuration = new ConfigurationBuilder()
 var options = configuration.GetClaudeAgentOptions();
 
 // Or load as builder for further customization
-var options = configuration.GetClaudeAgentOptionsBuilder()
+var options2 = configuration.GetClaudeAgentOptionsBuilder()
     .WithMaxTurns(20)  // Override config value
     .Build();
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L198-L210' title='Snippet source file'>snippet source</a> | <a href='#snippet-ConfigurationUsage' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ## Dependency Injection
 
 Register `IClaudeAgentService` with the DI container:
 
-```csharp
-using ih0.Claude.Agent.SDK;
-using ih0.Claude.Agent.SDK.Extensions;
-
+<!-- snippet: DependencyInjectionSetup -->
+<a id='snippet-DependencyInjectionSetup'></a>
+```cs
 // With builder configuration
 services.AddClaudeAgent(builder => builder
     .WithModel("claude-sonnet-4-20250514")
@@ -353,10 +400,14 @@ services.AddClaudeAgent(configuration);
 services.AddClaudeAgent(configuration, builder => builder
     .WithMaxTurns(20));
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L218-L230' title='Snippet source file'>snippet source</a> | <a href='#snippet-DependencyInjectionSetup' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 Then inject and use:
 
-```csharp
+<!-- snippet: DIServiceClass -->
+<a id='snippet-DIServiceClass'></a>
+```cs
 public class MyService
 {
     private readonly IClaudeAgentService _claude;
@@ -379,6 +430,8 @@ public class MyService
     }
 }
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L300-L322' title='Snippet source file'>snippet source</a> | <a href='#snippet-DIServiceClass' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ## Types
 
@@ -392,9 +445,9 @@ See the `ih0.Claude.Agent.SDK.Types` namespace for complete type definitions:
 
 ## Error Handling
 
-```csharp
-using ih0.Claude.Agent.SDK.Exceptions;
-
+<!-- snippet: ErrorHandling -->
+<a id='snippet-ErrorHandling'></a>
+```cs
 try
 {
     await foreach (var message in ClaudeAgent.QueryAsync("Hello"))
@@ -415,6 +468,8 @@ catch (ClaudeAgentException ex)
     Console.WriteLine($"Error: {ex.Message}");
 }
 ```
+<sup><a href='/examples/DocSnippets/Snippets.cs#L235-L255' title='Snippet source file'>snippet source</a> | <a href='#snippet-ErrorHandling' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 ## Available Tools
 
