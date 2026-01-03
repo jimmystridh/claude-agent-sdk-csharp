@@ -48,7 +48,7 @@ await foreach (var message in ClaudeAgent.QueryAsync("What is 2 + 2?"))
 
 ```csharp
 using ih0.Claude.Agent.SDK;
-using ih0.ih0.Claude.Agent.SDK.Types;
+using ih0.Claude.Agent.SDK.Types;
 
 // Simple query
 await foreach (var message in ClaudeAgent.QueryAsync("Hello Claude"))
@@ -136,8 +136,8 @@ For an end-to-end example, see [McpCalculator](examples/McpCalculator/Program.cs
 
 ```csharp
 using ih0.Claude.Agent.SDK;
-using ih0.ih0.Claude.Agent.SDK.Mcp;
-using ih0.ih0.Claude.Agent.SDK.Types;
+using ih0.Claude.Agent.SDK.Mcp;
+using ih0.Claude.Agent.SDK.Types;
 
 // Define tools using the SdkMcpServer base class
 public class CalculatorServer : SdkMcpServer
@@ -226,7 +226,7 @@ For more examples, see [Hooks example](examples/Hooks/Program.cs).
 
 ```csharp
 using ih0.Claude.Agent.SDK;
-using ih0.ih0.Claude.Agent.SDK.Types;
+using ih0.Claude.Agent.SDK.Types;
 
 // Define a hook to validate Bash commands
 Task<HookOutput> CheckBashCommand(HookInput input, string? toolUseId, HookContext context)
@@ -317,7 +317,7 @@ Load options from `IConfiguration`:
 ```
 
 ```csharp
-using ih0.ih0.Claude.Agent.SDK.Extensions;
+using ih0.Claude.Agent.SDK.Extensions;
 using Microsoft.Extensions.Configuration;
 
 var configuration = new ConfigurationBuilder()
@@ -339,7 +339,7 @@ Register `IClaudeAgentService` with the DI container:
 
 ```csharp
 using ih0.Claude.Agent.SDK;
-using ih0.ih0.Claude.Agent.SDK.Extensions;
+using ih0.Claude.Agent.SDK.Extensions;
 
 // With builder configuration
 services.AddClaudeAgent(builder => builder
@@ -393,7 +393,7 @@ See the `ih0.Claude.Agent.SDK.Types` namespace for complete type definitions:
 ## Error Handling
 
 ```csharp
-using ih0.ih0.Claude.Agent.SDK.Exceptions;
+using ih0.Claude.Agent.SDK.Exceptions;
 
 try
 {
