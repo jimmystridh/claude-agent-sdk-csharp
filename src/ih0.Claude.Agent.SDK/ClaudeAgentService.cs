@@ -179,6 +179,47 @@ public sealed class ClaudeAgentService : IClaudeAgentService
         if (overrides.Resume != null) builder.WithResume(overrides.Resume);
         if (overrides.ForkSession != null) builder.WithForkSession(overrides.ForkSession.Value);
         if (overrides.Settings != null) builder.WithSettings(overrides.Settings);
+        if (overrides.Tools.HasValue)
+        {
+            overrides.Tools.Value.Switch(
+                list => builder.WithTools(list),
+                preset => builder.WithTools(preset));
+        }
+        if (overrides.CliPath != null) builder.WithCliPath(overrides.CliPath);
+        if (overrides.Sandbox != null) builder.WithSandbox(overrides.Sandbox);
+        if (overrides.OutputFormat.HasValue) builder.WithOutputFormat(overrides.OutputFormat.Value);
+        if (overrides.MaxBufferSize != null) builder.WithMaxBufferSize(overrides.MaxBufferSize.Value);
+        if (overrides.SettingSources != null)
+        {
+            foreach (var source in overrides.SettingSources)
+            {
+                builder.AddSettingSource(source);
+            }
+        }
+        if (overrides.Plugins != null)
+        {
+            foreach (var plugin in overrides.Plugins)
+            {
+                builder.AddPlugin(plugin);
+            }
+        }
+        if (overrides.ExtraArgs != null)
+        {
+            foreach (var (name, value) in overrides.ExtraArgs)
+            {
+                builder.AddExtraArg(name, value);
+            }
+        }
+        if (overrides.CanUseTool != null) builder.WithCanUseTool(overrides.CanUseTool);
+        if (overrides.Stderr != null) builder.WithStderr(overrides.Stderr);
+        if (overrides.PermissionPromptToolName != null) builder.WithPermissionPromptToolName(overrides.PermissionPromptToolName);
+        if (overrides.Betas != null)
+        {
+            foreach (var beta in overrides.Betas)
+            {
+                builder.AddBeta(beta);
+            }
+        }
 
         return builder.Build();
     }

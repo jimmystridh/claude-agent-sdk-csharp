@@ -243,8 +243,8 @@ public static class MessageParser
                     Content = blockEl.TryGetProperty("content", out var cEl) && cEl.ValueKind != JsonValueKind.Null
                         ? cEl.Clone()
                         : null,
-                    IsError = blockEl.TryGetProperty("is_error", out var eEl) && eEl.ValueKind == JsonValueKind.True
-                        ? true
+                    IsError = blockEl.TryGetProperty("is_error", out var eEl) && (eEl.ValueKind == JsonValueKind.True || eEl.ValueKind == JsonValueKind.False)
+                        ? eEl.GetBoolean()
                         : null
                 },
                 _ => throw new MessageParseException($"Unknown content block type: {type}")

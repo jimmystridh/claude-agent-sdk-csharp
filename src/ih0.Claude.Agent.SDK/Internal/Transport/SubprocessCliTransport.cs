@@ -47,6 +47,13 @@ public sealed class SubprocessCliTransport : ITransport
         _logger = logger ?? NullLogger<SubprocessCliTransport>.Instance;
     }
 
+    private static string GetSdkVersion()
+    {
+        var assembly = typeof(SubprocessCliTransport).Assembly;
+        var version = assembly.GetName().Version;
+        return version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : "0.0.0";
+    }
+
     private static string FindCli()
     {
         var bundledCli = FindBundledCli();
@@ -401,7 +408,7 @@ public sealed class SubprocessCliTransport : ITransport
         }
 
         env["CLAUDE_CODE_ENTRYPOINT"] = "sdk-csharp";
-        env["CLAUDE_AGENT_SDK_VERSION"] = "0.1.0";
+        env["CLAUDE_AGENT_SDK_VERSION"] = GetSdkVersion();
 
         if (_options.EnableFileCheckpointing == true)
             env["CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING"] = "true";

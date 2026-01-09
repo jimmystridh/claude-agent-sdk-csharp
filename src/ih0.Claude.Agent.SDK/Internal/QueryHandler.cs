@@ -289,7 +289,76 @@ public sealed class QueryHandler : IAsyncDisposable
         if (request.TryGetProperty("permission_suggestions", out var suggestionsEl) &&
             suggestionsEl.ValueKind == JsonValueKind.Array)
         {
-            // Parse suggestions if needed
+            foreach (var suggestionEl in suggestionsEl.EnumerateArray())
+            {
+                if (suggestionEl.ValueKind != JsonValueKind.Object)
+                    continue;
+
+                var typeStr = suggestionEl.TryGetProperty("type", out var typeEl) ? typeEl.GetString() : null;
+                if (typeStr == null)
+                    continue;
+
+                var permissionUpdate = new PermissionUpdate
+                {
+                    Type = typeStr switch
+                    {
+                        "addRules" => PermissionUpdateType.AddRules,
+                        "replaceRules" => PermissionUpdateType.ReplaceRules,
+                        "removeRules" => PermissionUpdateType.RemoveRules,
+                        "setMode" => PermissionUpdateType.SetMode,
+                        "addDirectories" => PermissionUpdateType.AddDirectories,
+                        "removeDirectories" => PermissionUpdateType.RemoveDirectories,
+                        _ => PermissionUpdateType.AddRules
+                    },
+                    Behavior = suggestionEl.TryGetProperty("behavior", out var behaviorEl) && behaviorEl.ValueKind == JsonValueKind.String
+                        ? behaviorEl.GetString() switch
+                        {
+                            "allow" => PermissionBehavior.Allow,
+                            "deny" => PermissionBehavior.Deny,
+                            "ask" => PermissionBehavior.Ask,
+                            _ => null
+                        }
+                        : null,
+                    Mode = suggestionEl.TryGetProperty("mode", out var modeEl) && modeEl.ValueKind == JsonValueKind.String
+                        ? modeEl.GetString() switch
+                        {
+                            "default" => Types.PermissionMode.Default,
+                            "acceptEdits" => Types.PermissionMode.AcceptEdits,
+                            "plan" => Types.PermissionMode.Plan,
+                            "bypassPermissions" => Types.PermissionMode.BypassPermissions,
+                            _ => null
+                        }
+                        : null,
+                    Destination = suggestionEl.TryGetProperty("destination", out var destEl) && destEl.ValueKind == JsonValueKind.String
+                        ? destEl.GetString() switch
+                        {
+                            "userSettings" => PermissionUpdateDestination.UserSettings,
+                            "projectSettings" => PermissionUpdateDestination.ProjectSettings,
+                            "localSettings" => PermissionUpdateDestination.LocalSettings,
+                            "session" => PermissionUpdateDestination.Session,
+                            _ => null
+                        }
+                        : null,
+                    Rules = suggestionEl.TryGetProperty("rules", out var rulesEl) && rulesEl.ValueKind == JsonValueKind.Array
+                        ? rulesEl.EnumerateArray()
+                            .Where(r => r.ValueKind == JsonValueKind.Object)
+                            .Select(r => new PermissionRuleValue
+                            {
+                                ToolName = r.TryGetProperty("toolName", out var tn) ? tn.GetString() ?? "" : "",
+                                RuleContent = r.TryGetProperty("ruleContent", out var rc) ? rc.GetString() : null
+                            })
+                            .ToList()
+                        : null,
+                    Directories = suggestionEl.TryGetProperty("directories", out var dirsEl) && dirsEl.ValueKind == JsonValueKind.Array
+                        ? dirsEl.EnumerateArray()
+                            .Where(d => d.ValueKind == JsonValueKind.String)
+                            .Select(d => d.GetString() ?? "")
+                            .ToList()
+                        : null
+                };
+
+                suggestions.Add(permissionUpdate);
+            }
         }
 
         var context = new ToolPermissionContext
@@ -305,7 +374,7 @@ public sealed class QueryHandler : IAsyncDisposable
             var responseDict = new Dictionary<string, object?>
             {
                 ["behavior"] = "allow",
-                ["updatedInput"] = allow.UpdatedInput?.ValueKind != JsonValueKind.Undefined
+                ["updatedInput"] = allow.UpdatedInput.HasValue && allow.UpdatedInput.Value.ValueKind != JsonValueKind.Undefined
                     ? allow.UpdatedInput
                     : originalInput
             };

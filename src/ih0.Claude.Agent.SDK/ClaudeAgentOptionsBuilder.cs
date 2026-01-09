@@ -706,6 +706,29 @@ public static class ClaudeAgentOptionsExtensions
         if (options.Sandbox != null)
             builder.WithSandbox(options.Sandbox);
 
+        if (options.OutputFormat.HasValue)
+            builder.WithOutputFormat(options.OutputFormat.Value);
+
+        if (options.PermissionPromptToolName != null)
+            builder.WithPermissionPromptToolName(options.PermissionPromptToolName);
+
+        if (options.Hooks != null)
+        {
+            foreach (var (evt, matchers) in options.Hooks)
+            {
+                foreach (var matcher in matchers)
+                {
+                    if (matcher.Hooks != null)
+                    {
+                        foreach (var hook in matcher.Hooks)
+                        {
+                            builder.AddHook(evt, hook, matcher.Matcher, matcher.Timeout);
+                        }
+                    }
+                }
+            }
+        }
+
         if (options.IncludePartialMessages.HasValue)
             builder.WithIncludePartialMessages(options.IncludePartialMessages.Value);
 

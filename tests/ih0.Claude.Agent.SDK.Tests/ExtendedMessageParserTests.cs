@@ -294,8 +294,8 @@ public class ExtendedMessageParserTests
             var toolResult = asst.Content[0] as ToolResultBlock;
 
             toolResult!.ToolUseId.Should().Be("toolu_123");
-            // is_error: false results in null (only true is captured)
-            toolResult.IsError.Should().BeNull();
+            // is_error: false is now correctly parsed as false
+            toolResult.IsError.Should().BeFalse();
         }
     }
 

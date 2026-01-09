@@ -216,7 +216,7 @@ public record HookOutput
 /// <summary>
 /// Output for asynchronous hook processing.
 /// </summary>
-public record AsyncHookOutput
+public record AsyncHookOutput : HookOutput
 {
     /// <summary>
     /// Whether this is an async response.
