@@ -55,9 +55,10 @@ public class ToolCallbackTests
         [Fact]
         public void HookEvent_AllValuesAreDefined()
         {
-            Enum.GetValues<HookEvent>().Should().HaveCount(6);
+            Enum.GetValues<HookEvent>().Should().HaveCount(7);
             Enum.IsDefined(HookEvent.PreToolUse).Should().BeTrue();
             Enum.IsDefined(HookEvent.PostToolUse).Should().BeTrue();
+            Enum.IsDefined(HookEvent.PostToolUseFailure).Should().BeTrue();
             Enum.IsDefined(HookEvent.UserPromptSubmit).Should().BeTrue();
             Enum.IsDefined(HookEvent.Stop).Should().BeTrue();
             Enum.IsDefined(HookEvent.SubagentStop).Should().BeTrue();
