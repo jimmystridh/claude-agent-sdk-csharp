@@ -156,6 +156,6 @@ public class ClientTests
 
         var result = GetResult(messages);
         result.Should().NotBeNull("Should have result");
-        result!.NumTurns.Should().BeLessOrEqualTo(1, $"Should respect max_turns=1, got {result.NumTurns} turns");
+        result!.NumTurns.Should().BeLessThanOrEqualTo(1, $"Should respect max_turns=1, got {result.NumTurns} turns");
     }
 }
