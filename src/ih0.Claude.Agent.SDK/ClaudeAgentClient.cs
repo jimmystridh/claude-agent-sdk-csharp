@@ -408,6 +408,18 @@ public sealed class ClaudeAgentClient : IAsyncDisposable
     }
 
     /// <summary>
+    /// Get current MCP server connection status (streaming mode only).
+    /// </summary>
+    /// <exception cref="CliConnectionException">Thrown when not connected.</exception>
+    public async Task<JsonElement> GetMcpStatusAsync(CancellationToken cancellationToken = default)
+    {
+        if (_queryHandler == null)
+            throw new CliConnectionException("Not connected. Call ConnectAsync() first.");
+
+        return await _queryHandler.GetMcpStatusAsync(cancellationToken);
+    }
+
+    /// <summary>
     /// Gets the server initialization information.
     /// </summary>
     /// <returns>The server info as a JSON element, or null if not connected or not yet initialized.</returns>

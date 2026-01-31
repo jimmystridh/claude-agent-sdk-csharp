@@ -450,6 +450,23 @@ public sealed class QueryHandler : IAsyncDisposable
                 };
                 break;
 
+            case "PostToolUseFailure":
+                hookInput = new PostToolUseFailureHookInput
+                {
+                    SessionId = inputEl.GetProperty("session_id").GetString() ?? "",
+                    TranscriptPath = inputEl.GetProperty("transcript_path").GetString() ?? "",
+                    Cwd = inputEl.GetProperty("cwd").GetString() ?? "",
+                    PermissionMode = inputEl.TryGetProperty("permission_mode", out var pm2f) ? pm2f.GetString() : null,
+                    ToolName = inputEl.GetProperty("tool_name").GetString() ?? "",
+                    ToolInput = inputEl.GetProperty("tool_input"),
+                    ToolUseId = inputEl.GetProperty("tool_use_id").GetString() ?? "",
+                    Error = inputEl.GetProperty("error").GetString() ?? "",
+                    IsInterrupt = inputEl.TryGetProperty("is_interrupt", out var ii) && (ii.ValueKind == JsonValueKind.True || ii.ValueKind == JsonValueKind.False)
+                        ? ii.GetBoolean()
+                        : null
+                };
+                break;
+
             case "UserPromptSubmit":
                 hookInput = new UserPromptSubmitHookInput
                 {
@@ -700,6 +717,17 @@ public sealed class QueryHandler : IAsyncDisposable
             {
                 ["subtype"] = "rewind_files",
                 ["user_message_id"] = userMessageId
+            },
+            60,
+            cancellationToken);
+    }
+
+    public async Task<JsonElement> GetMcpStatusAsync(CancellationToken cancellationToken = default)
+    {
+        return await SendControlRequestAsync(
+            new Dictionary<string, object?>
+            {
+                ["subtype"] = "mcp_status"
             },
             60,
             cancellationToken);

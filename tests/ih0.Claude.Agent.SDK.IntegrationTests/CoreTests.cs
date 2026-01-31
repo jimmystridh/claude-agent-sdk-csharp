@@ -23,7 +23,7 @@ public class CoreTests
         var result = GetResult(messages);
         result.Should().NotBeNull();
         result!.IsError.Should().BeFalse("Query should not have errored");
-        result.NumTurns.Should().BeGreaterOrEqualTo(1, "Should have at least 1 turn");
+        result.NumTurns.Should().BeGreaterThanOrEqualTo(1, "Should have at least 1 turn");
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class CoreTests
             count++;
         }
 
-        count.Should().BeGreaterOrEqualTo(3, "Should receive at least 3 messages (system, assistant, result)");
+        count.Should().BeGreaterThanOrEqualTo(3, "Should receive at least 3 messages (system, assistant, result)");
     }
 
     [Fact]

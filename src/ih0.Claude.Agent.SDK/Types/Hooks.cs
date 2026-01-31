@@ -88,6 +88,48 @@ public sealed record PostToolUseHookInput : HookInput
 }
 
 /// <summary>
+/// Input data for post-tool-use-failure hooks.
+/// </summary>
+public sealed record PostToolUseFailureHookInput : HookInput
+{
+    /// <summary>
+    /// The name of the hook event.
+    /// </summary>
+    [JsonPropertyName("hook_event_name")]
+    public string HookEventName => "PostToolUseFailure";
+
+    /// <summary>
+    /// The name of the tool that failed.
+    /// </summary>
+    [JsonPropertyName("tool_name")]
+    public required string ToolName { get; init; }
+
+    /// <summary>
+    /// The input parameters that were passed to the tool.
+    /// </summary>
+    [JsonPropertyName("tool_input")]
+    public required JsonElement ToolInput { get; init; }
+
+    /// <summary>
+    /// The tool use ID.
+    /// </summary>
+    [JsonPropertyName("tool_use_id")]
+    public required string ToolUseId { get; init; }
+
+    /// <summary>
+    /// The error message.
+    /// </summary>
+    [JsonPropertyName("error")]
+    public required string Error { get; init; }
+
+    /// <summary>
+    /// Whether the failure was due to an interrupt.
+    /// </summary>
+    [JsonPropertyName("is_interrupt")]
+    public bool? IsInterrupt { get; init; }
+}
+
+/// <summary>
 /// Input data for user prompt submission hooks.
 /// </summary>
 public sealed record UserPromptSubmitHookInput : HookInput
@@ -312,6 +354,24 @@ public sealed record PostToolUseHookSpecificOutput
     /// </summary>
     [JsonPropertyName("hookEventName")]
     public string HookEventName => "PostToolUse";
+
+    /// <summary>
+    /// Additional context to add to the conversation.
+    /// </summary>
+    [JsonPropertyName("additionalContext")]
+    public string? AdditionalContext { get; init; }
+}
+
+/// <summary>
+/// Hook-specific output for post-tool-use-failure hooks.
+/// </summary>
+public sealed record PostToolUseFailureHookSpecificOutput
+{
+    /// <summary>
+    /// The name of the hook event.
+    /// </summary>
+    [JsonPropertyName("hookEventName")]
+    public string HookEventName => "PostToolUseFailure";
 
     /// <summary>
     /// Additional context to add to the conversation.

@@ -53,6 +53,12 @@ public enum HookEvent
     PostToolUse,
 
     /// <summary>
+    /// Triggered when a tool use fails.
+    /// </summary>
+    [EnumMember(Value = "PostToolUseFailure")]
+    PostToolUseFailure,
+
+    /// <summary>
     /// Triggered when a user prompt is submitted.
     /// </summary>
     [EnumMember(Value = "UserPromptSubmit")]
@@ -290,6 +296,7 @@ public static class HookEventExtensions
     {
         HookEvent.PreToolUse => "PreToolUse",
         HookEvent.PostToolUse => "PostToolUse",
+        HookEvent.PostToolUseFailure => "PostToolUseFailure",
         HookEvent.UserPromptSubmit => "UserPromptSubmit",
         HookEvent.Stop => "Stop",
         HookEvent.SubagentStop => "SubagentStop",

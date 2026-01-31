@@ -25,7 +25,7 @@ public class ResultTests
         result.Should().NotBeNull("Should have result message");
 
         result!.DurationMs.Should().BePositive("Duration should be positive");
-        result.NumTurns.Should().BeGreaterOrEqualTo(1, "Should have at least 1 turn");
+        result.NumTurns.Should().BeGreaterThanOrEqualTo(1, "Should have at least 1 turn");
         result.IsError.Should().BeFalse("Should not be an error");
         result.Subtype.Should().NotBeEmpty("Subtype should not be empty");
     }
@@ -50,7 +50,7 @@ public class ResultTests
 
         if (result!.TotalCostUsd.HasValue)
         {
-            result.TotalCostUsd.Value.Should().BeGreaterOrEqualTo(0, "Cost should be non-negative");
+            result.TotalCostUsd.Value.Should().BeGreaterThanOrEqualTo(0, "Cost should be non-negative");
             _output.WriteLine($"Query cost: ${result.TotalCostUsd.Value:F6}");
         }
         else
@@ -272,6 +272,6 @@ public class ResultTests
         _output.WriteLine($"Turn 1: turns={result1.NumTurns}, cost={result1.TotalCostUsd}");
         _output.WriteLine($"Turn 2: turns={result2.NumTurns}, cost={result2.TotalCostUsd}");
 
-        result2.NumTurns.Should().BeGreaterOrEqualTo(result1.NumTurns, "Turn count should not decrease");
+        result2.NumTurns.Should().BeGreaterThanOrEqualTo(result1.NumTurns, "Turn count should not decrease");
     }
 }
