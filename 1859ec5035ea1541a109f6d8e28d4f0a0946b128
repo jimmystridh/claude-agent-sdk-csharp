@@ -1,0 +1,47 @@
+UPSTREAM.md
+  5be2c53788a41d03 11-13
+tests/ih0.Claude.Agent.SDK.Tests/ToolCallbackTests.cs
+  5be2c53788a41d03 58,66-68
+src/ih0.Claude.Agent.SDK/ih0.Claude.Agent.SDK.csproj
+  5be2c53788a41d03 5
+src/ih0.Claude.Agent.SDK/Types/Hooks.cs
+  5be2c53788a41d03 58-63,94-99,196-213,375-380,399-404,442-528
+src/ih0.Claude.Agent.SDK/ClaudeAgentClient.cs
+  5be2c53788a41d03 173,175,189,458-474
+tests/ih0.Claude.Agent.SDK.Tests/TransportTests.cs
+  5be2c53788a41d03 70-71,75-108
+src/ih0.Claude.Agent.SDK/Internal/QueryHandler.cs
+  5be2c53788a41d03 20,44,53,117-118,440-441,454-455,505-508,524-561,615-635
+src/ih0.Claude.Agent.SDK/Mcp/ISdkMcpServer.cs
+  5be2c53788a41d03 2,64-86
+src/ih0.Claude.Agent.SDK/Mcp/SdkMcpServer.cs
+  5be2c53788a41d03 76-77,129-133,148,154-155,190-191
+tests/ih0.Claude.Agent.SDK.Tests/ExtendedMessageParserTests.cs
+  5be2c53788a41d03 163,168,171,180-234
+src/ih0.Claude.Agent.SDK/Internal/MessageParser.cs
+  5be2c53788a41d03 86
+src/ih0.Claude.Agent.SDK/Types/Enums.cs
+  5be2c53788a41d03 83-101,322-324
+src/ih0.Claude.Agent.SDK/ClaudeAgent.cs
+  5be2c53788a41d03 48-49,94,96,110,197,199,213,244-260
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "1859ec5035ea1541a109f6d8e28d4f0a0946b128",
+  "prompts": {
+    "5be2c53788a41d03": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2bd05274-7f5a-4027-86bd-07a5860fe6ea",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Jimmy Stridh <jimmystridh@users.noreply.github.com>",
+      "messages": [],
+      "total_additions": 415,
+      "total_deletions": 96,
+      "accepted_lines": 410,
+      "overriden_lines": 0
+    }
+  }
+}
