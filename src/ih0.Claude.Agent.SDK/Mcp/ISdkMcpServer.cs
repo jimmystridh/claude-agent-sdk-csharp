@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ih0.Claude.Agent.SDK;
 
@@ -60,6 +61,29 @@ public sealed record SdkMcpToolDefinition
     /// JSON Schema for the tool's input parameters.
     /// </summary>
     public required JsonElement InputSchema { get; init; }
+
+    /// <summary>
+    /// Optional annotations describing tool behavior hints.
+    /// </summary>
+    public ToolAnnotations? Annotations { get; init; }
+}
+
+/// <summary>
+/// Annotations describing tool behavior hints per MCP spec.
+/// </summary>
+public sealed record ToolAnnotations
+{
+    [JsonPropertyName("readOnlyHint")]
+    public bool? ReadOnlyHint { get; init; }
+
+    [JsonPropertyName("destructiveHint")]
+    public bool? DestructiveHint { get; init; }
+
+    [JsonPropertyName("idempotentHint")]
+    public bool? IdempotentHint { get; init; }
+
+    [JsonPropertyName("openWorldHint")]
+    public bool? OpenWorldHint { get; init; }
 }
 
 /// <summary>

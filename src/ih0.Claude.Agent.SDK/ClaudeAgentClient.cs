@@ -170,8 +170,9 @@ public sealed class ClaudeAgentClient : IAsyncDisposable
             }
         }
 
-        // Convert hooks
+        // Convert hooks and agents
         var hooks = ConvertHooks(options.Hooks);
+        var agents = ConvertAgents(options.Agents);
 
         // Calculate timeout
         var timeoutMs = int.TryParse(
@@ -185,6 +186,7 @@ public sealed class ClaudeAgentClient : IAsyncDisposable
             canUseTool: options.CanUseTool,
             hooks: hooks,
             sdkMcpServers: sdkMcpServers,
+            agents: agents,
             initializeTimeout: initializeTimeout,
             logger: _loggerFactory?.CreateLogger<QueryHandler>());
 
@@ -451,6 +453,23 @@ public sealed class ClaudeAgentClient : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await DisconnectAsync();
+    }
+
+    private static Dictionary<string, object>? ConvertAgents(
+        IReadOnlyDictionary<string, AgentDefinition>? agents)
+    {
+        if (agents == null || agents.Count == 0)
+            return null;
+
+        return agents.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (object)new Dictionary<string, object?>
+            {
+                ["description"] = kvp.Value.Description,
+                ["prompt"] = kvp.Value.Prompt,
+                ["tools"] = kvp.Value.Tools,
+                ["model"] = kvp.Value.Model?.ToString().ToLowerInvariant()
+            });
     }
 
     private static Dictionary<string, List<HookMatcherConfig>>? ConvertHooks(

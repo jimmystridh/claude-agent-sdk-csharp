@@ -22,7 +22,6 @@ public sealed class SubprocessCliTransport : ITransport
     private readonly string? _cwd;
     private readonly int _maxBufferSize;
     private readonly SemaphoreSlim _writeLock = new(1, 1);
-    private readonly List<string> _tempFiles = new();
     private readonly ILogger _logger;
 
     private Process? _process;
@@ -244,20 +243,6 @@ public sealed class SubprocessCliTransport : ITransport
         if (_options.ForkSession == true)
             cmd.Add("--fork-session");
 
-        if (_options.Agents?.Count > 0)
-        {
-            var agentsJson = JsonSerializer.Serialize(_options.Agents.ToDictionary(
-                kvp => kvp.Key,
-                kvp => new
-                {
-                    description = kvp.Value.Description,
-                    prompt = kvp.Value.Prompt,
-                    tools = kvp.Value.Tools,
-                    model = kvp.Value.Model?.ToString().ToLowerInvariant()
-                }));
-            cmd.AddRange(new[] { "--agents", agentsJson });
-        }
-
         if (_options.SettingSources != null && _options.SettingSources.Count > 0)
         {
             var sourcesValue = string.Join(",", _options.SettingSources.Select(s => s switch
@@ -304,15 +289,7 @@ public sealed class SubprocessCliTransport : ITransport
             }
         }
 
-        var isStreaming = _prompt.IsT1;
-        if (isStreaming)
-        {
-            cmd.AddRange(new[] { "--input-format", "stream-json" });
-        }
-        else
-        {
-            cmd.AddRange(new[] { "--print", "--", _prompt.AsT0 });
-        }
+        cmd.AddRange(new[] { "--input-format", "stream-json" });
 
         return cmd;
     }
@@ -459,13 +436,6 @@ public sealed class SubprocessCliTransport : ITransport
                             _options.Stderr?.Invoke(line);
                     }
                 }, CancellationToken.None);
-            }
-
-            var isStreaming = _prompt.IsT1;
-            if (!isStreaming)
-            {
-                _stdin.Close();
-                _stdin = null;
             }
 
             _isReady = true;
@@ -644,12 +614,6 @@ public sealed class SubprocessCliTransport : ITransport
 
     public async Task CloseAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var tempFile in _tempFiles)
-        {
-            try { File.Delete(tempFile); } catch (Exception ex) { DiagnosticHelper.LogIgnoredException(ex); }
-        }
-        _tempFiles.Clear();
-
         if (_process == null)
         {
             _isReady = false;

@@ -67,9 +67,45 @@ public class TransportTests
             cmd[0].Should().Be(DefaultCliPath);
             cmd.Should().Contain("--output-format");
             cmd.Should().Contain("stream-json");
-            cmd.Should().Contain("--print");
-            cmd.Should().Contain("Hello");
+            cmd.Should().Contain("--input-format");
+            cmd.Should().NotContain("--print");
             cmd.Should().Contain("--system-prompt");
+        }
+
+        [Fact]
+        public void BuildCommand_AlwaysUsesStreamingMode()
+        {
+            var prompt = OneOf<string, IAsyncEnumerable<JsonElement>>.FromT0("test");
+            var transport = new SubprocessCliTransport(prompt, MakeOptions());
+
+            var cmd = transport.BuildCommand();
+
+            var inputFormatIdx = cmd.IndexOf("--input-format");
+            inputFormatIdx.Should().BeGreaterThan(-1);
+            cmd[inputFormatIdx + 1].Should().Be("stream-json");
+        }
+
+        [Fact]
+        public void BuildCommand_DoesNotIncludeAgentsFlag()
+        {
+            var prompt = OneOf<string, IAsyncEnumerable<JsonElement>>.FromT0("test");
+            var options = new ClaudeAgentOptions
+            {
+                CliPath = DefaultCliPath,
+                Agents = new Dictionary<string, AgentDefinition>
+                {
+                    ["test-agent"] = new AgentDefinition
+                    {
+                        Description = "Test agent",
+                        Prompt = "You are a test agent"
+                    }
+                }
+            };
+            var transport = new SubprocessCliTransport(prompt, options);
+
+            var cmd = transport.BuildCommand();
+
+            cmd.Should().NotContain("--agents");
         }
 
         [Fact]

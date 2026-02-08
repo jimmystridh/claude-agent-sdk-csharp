@@ -73,7 +73,8 @@ public sealed class SdkMcpServer : ISdkMcpServer
         {
             Name = t.Name,
             Description = t.Description,
-            InputSchema = t.InputSchema
+            InputSchema = t.InputSchema,
+            Annotations = t.Annotations
         }).ToList();
 
         return Task.FromResult<IReadOnlyList<SdkMcpToolDefinition>>(definitions);
@@ -125,6 +126,11 @@ public sealed record SdkMcpTool
     /// The handler function that executes the tool.
     /// </summary>
     public required Func<JsonElement, CancellationToken, Task<SdkMcpToolResult>> Handler { get; init; }
+
+    /// <summary>
+    /// Optional annotations describing tool behavior hints.
+    /// </summary>
+    public ToolAnnotations? Annotations { get; init; }
 }
 
 /// <summary>
@@ -139,12 +145,14 @@ public static class SdkMcpToolBuilder
     /// <param name="description">A description of what the tool does.</param>
     /// <param name="parameters">The parameter names and types.</param>
     /// <param name="handler">The handler function.</param>
+    /// <param name="annotations">Optional tool behavior annotations.</param>
     /// <returns>A new tool definition.</returns>
     public static SdkMcpTool CreateTool(
         string name,
         string description,
         Dictionary<string, Type> parameters,
-        Func<JsonElement, CancellationToken, Task<SdkMcpToolResult>> handler)
+        Func<JsonElement, CancellationToken, Task<SdkMcpToolResult>> handler,
+        ToolAnnotations? annotations = null)
     {
         var properties = new Dictionary<string, object>();
         var required = new List<string>();
@@ -179,7 +187,8 @@ public static class SdkMcpToolBuilder
             Name = name,
             Description = description,
             InputSchema = schemaElement,
-            Handler = handler
+            Handler = handler,
+            Annotations = annotations
         };
     }
 

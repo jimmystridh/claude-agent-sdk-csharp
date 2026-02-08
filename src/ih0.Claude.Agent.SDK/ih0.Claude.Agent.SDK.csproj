@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>ih0.Claude.Agent.SDK</PackageId>
-    <Version>0.1.4</Version>
+    <Version>0.1.5</Version>
     <Authors>Anthropic</Authors>
     <Description>Claude Agent SDK for .NET - Interact with Claude Code CLI</Description>
     <PackageTags>claude;anthropic;ai;agent;sdk</PackageTags>

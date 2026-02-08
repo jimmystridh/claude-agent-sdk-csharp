@@ -45,40 +45,11 @@ public static class ClaudeAgent
 
         options ??= new ClaudeAgentOptions();
 
-        // Check if we need control protocol support (MCP servers, hooks, or permissions)
-        var needsControlProtocol = HasSdkMcpServers(options) || options.Hooks?.Count > 0 || options.CanUseTool != null;
-
-        if (needsControlProtocol)
+        // Always use streaming mode with control protocol
+        await foreach (var message in QueryWithControlProtocolAsync(prompt, options, loggerFactory, cancellationToken))
         {
-            // Use streaming mode internally to support control protocol
-            await foreach (var message in QueryWithControlProtocolAsync(prompt, options, loggerFactory, cancellationToken))
-            {
-                yield return message;
-            }
+            yield return message;
         }
-        else
-        {
-            // Simple mode without control protocol
-            await using var transport = new SubprocessCliTransport(
-                OneOf<string, IAsyncEnumerable<JsonElement>>.FromT0(prompt),
-                options,
-                loggerFactory?.CreateLogger<SubprocessCliTransport>());
-
-            await transport.ConnectAsync(cancellationToken);
-
-            await foreach (var message in transport.ReadMessagesAsync(cancellationToken))
-            {
-                yield return MessageParser.Parse(message);
-            }
-        }
-    }
-
-    private static bool HasSdkMcpServers(ClaudeAgentOptions options)
-    {
-        if (options.McpServers?.IsT0 != true)
-            return false;
-
-        return options.McpServers.Value.AsT0.Values.Any(c => c is McpSdkServerConfig);
     }
 
     private static async IAsyncEnumerable<Message> QueryWithControlProtocolAsync(
@@ -120,8 +91,9 @@ public static class ClaudeAgent
             }
         }
 
-        // Convert hooks
+        // Convert hooks and agents
         var hooks = ConvertHooks(options.Hooks);
+        var agents = ConvertAgents(options.Agents);
 
         // Calculate timeout
         var timeoutMs = int.TryParse(
@@ -135,6 +107,7 @@ public static class ClaudeAgent
             canUseTool: options.CanUseTool,
             hooks: hooks,
             sdkMcpServers: sdkMcpServers,
+            agents: agents,
             initializeTimeout: initializeTimeout,
             logger: loggerFactory?.CreateLogger<QueryHandler>());
 
@@ -221,8 +194,9 @@ public static class ClaudeAgent
             }
         }
 
-        // Convert hooks
+        // Convert hooks and agents
         var hooks = ConvertHooks(options.Hooks);
+        var agents = ConvertAgents(options.Agents);
 
         // Calculate timeout
         var timeoutMs = int.TryParse(
@@ -236,6 +210,7 @@ public static class ClaudeAgent
             canUseTool: options.CanUseTool,
             hooks: hooks,
             sdkMcpServers: sdkMcpServers,
+            agents: agents,
             initializeTimeout: initializeTimeout,
             logger: loggerFactory?.CreateLogger<QueryHandler>());
 
@@ -264,6 +239,23 @@ public static class ClaudeAgent
         {
             yield return MessageParser.Parse(message);
         }
+    }
+
+    private static Dictionary<string, object>? ConvertAgents(
+        IReadOnlyDictionary<string, AgentDefinition>? agents)
+    {
+        if (agents == null || agents.Count == 0)
+            return null;
+
+        return agents.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (object)new Dictionary<string, object?>
+            {
+                ["description"] = kvp.Value.Description,
+                ["prompt"] = kvp.Value.Prompt,
+                ["tools"] = kvp.Value.Tools,
+                ["model"] = kvp.Value.Model?.ToString().ToLowerInvariant()
+            });
     }
 
     private static Dictionary<string, List<HookMatcherConfig>>? ConvertHooks(

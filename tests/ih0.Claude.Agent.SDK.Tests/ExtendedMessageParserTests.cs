@@ -160,15 +160,15 @@ public class ExtendedMessageParserTests
         }
 
         [Fact]
-        public void ParseAssistantMessage_WithError()
+        public void ParseAssistantMessage_WithError_AtTopLevel()
         {
             var raw = JsonDocument.Parse("""
             {
                 "type": "assistant",
+                "error": "rate_limit",
                 "message": {
                     "content": [{"type": "text", "text": "Error occurred"}],
-                    "model": "claude-3",
-                    "error": "rate_limit"
+                    "model": "claude-3"
                 }
             }
             """).RootElement;
@@ -176,6 +176,62 @@ public class ExtendedMessageParserTests
             var msg = MessageParser.Parse(raw);
             var asst = (AssistantMessage)msg;
             asst.Error.Should().Be(AssistantMessageErrorType.RateLimit);
+        }
+
+        [Fact]
+        public void ParseAssistantMessage_WithAuthenticationFailedError()
+        {
+            var raw = JsonDocument.Parse("""
+            {
+                "type": "assistant",
+                "error": "authentication_failed",
+                "message": {
+                    "content": [{"type": "text", "text": "Auth failed"}],
+                    "model": "claude-3"
+                }
+            }
+            """).RootElement;
+
+            var msg = MessageParser.Parse(raw);
+            var asst = (AssistantMessage)msg;
+            asst.Error.Should().Be(AssistantMessageErrorType.AuthenticationFailed);
+        }
+
+        [Fact]
+        public void ParseAssistantMessage_WithUnknownError()
+        {
+            var raw = JsonDocument.Parse("""
+            {
+                "type": "assistant",
+                "error": "some_future_error",
+                "message": {
+                    "content": [{"type": "text", "text": "Unknown"}],
+                    "model": "claude-3"
+                }
+            }
+            """).RootElement;
+
+            var msg = MessageParser.Parse(raw);
+            var asst = (AssistantMessage)msg;
+            asst.Error.Should().Be(AssistantMessageErrorType.Unknown);
+        }
+
+        [Fact]
+        public void ParseAssistantMessage_WithNoError()
+        {
+            var raw = JsonDocument.Parse("""
+            {
+                "type": "assistant",
+                "message": {
+                    "content": [{"type": "text", "text": "All good"}],
+                    "model": "claude-3"
+                }
+            }
+            """).RootElement;
+
+            var msg = MessageParser.Parse(raw);
+            var asst = (AssistantMessage)msg;
+            asst.Error.Should().BeNull();
         }
     }
 

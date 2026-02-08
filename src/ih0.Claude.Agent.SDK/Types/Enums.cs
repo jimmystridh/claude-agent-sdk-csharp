@@ -80,7 +80,25 @@ public enum HookEvent
     /// Triggered before context compaction.
     /// </summary>
     [EnumMember(Value = "PreCompact")]
-    PreCompact
+    PreCompact,
+
+    /// <summary>
+    /// Triggered when a notification is sent.
+    /// </summary>
+    [EnumMember(Value = "Notification")]
+    Notification,
+
+    /// <summary>
+    /// Triggered when a subagent starts.
+    /// </summary>
+    [EnumMember(Value = "SubagentStart")]
+    SubagentStart,
+
+    /// <summary>
+    /// Triggered when a permission request is made.
+    /// </summary>
+    [EnumMember(Value = "PermissionRequest")]
+    PermissionRequest
 }
 
 /// <summary>
@@ -301,6 +319,9 @@ public static class HookEventExtensions
         HookEvent.Stop => "Stop",
         HookEvent.SubagentStop => "SubagentStop",
         HookEvent.PreCompact => "PreCompact",
+        HookEvent.Notification => "Notification",
+        HookEvent.SubagentStart => "SubagentStart",
+        HookEvent.PermissionRequest => "PermissionRequest",
         _ => throw new ArgumentOutOfRangeException(nameof(evt))
     };
 }

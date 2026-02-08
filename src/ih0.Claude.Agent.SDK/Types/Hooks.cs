@@ -55,6 +55,12 @@ public sealed record PreToolUseHookInput : HookInput
     /// </summary>
     [JsonPropertyName("tool_input")]
     public required JsonElement ToolInput { get; init; }
+
+    /// <summary>
+    /// The tool use ID.
+    /// </summary>
+    [JsonPropertyName("tool_use_id")]
+    public string? ToolUseId { get; init; }
 }
 
 /// <summary>
@@ -85,6 +91,12 @@ public sealed record PostToolUseHookInput : HookInput
     /// </summary>
     [JsonPropertyName("tool_response")]
     public required JsonElement ToolResponse { get; init; }
+
+    /// <summary>
+    /// The tool use ID.
+    /// </summary>
+    [JsonPropertyName("tool_use_id")]
+    public string? ToolUseId { get; init; }
 }
 
 /// <summary>
@@ -181,6 +193,24 @@ public sealed record SubagentStopHookInput : HookInput
     /// </summary>
     [JsonPropertyName("stop_hook_active")]
     public required bool StopHookActive { get; init; }
+
+    /// <summary>
+    /// The agent ID.
+    /// </summary>
+    [JsonPropertyName("agent_id")]
+    public string? AgentId { get; init; }
+
+    /// <summary>
+    /// Path to the agent transcript.
+    /// </summary>
+    [JsonPropertyName("agent_transcript_path")]
+    public string? AgentTranscriptPath { get; init; }
+
+    /// <summary>
+    /// The type of agent.
+    /// </summary>
+    [JsonPropertyName("agent_type")]
+    public string? AgentType { get; init; }
 }
 
 /// <summary>
@@ -342,6 +372,12 @@ public sealed record PreToolUseHookSpecificOutput
     /// </summary>
     [JsonPropertyName("updatedInput")]
     public JsonElement? UpdatedInput { get; init; }
+
+    /// <summary>
+    /// Additional context to add to the conversation.
+    /// </summary>
+    [JsonPropertyName("additionalContext")]
+    public string? AdditionalContext { get; init; }
 }
 
 /// <summary>
@@ -360,6 +396,12 @@ public sealed record PostToolUseHookSpecificOutput
     /// </summary>
     [JsonPropertyName("additionalContext")]
     public string? AdditionalContext { get; init; }
+
+    /// <summary>
+    /// Updated MCP tool output.
+    /// </summary>
+    [JsonPropertyName("updatedMCPToolOutput")]
+    public JsonElement? UpdatedMcpToolOutput { get; init; }
 }
 
 /// <summary>
@@ -396,4 +438,91 @@ public sealed record UserPromptSubmitHookSpecificOutput
     /// </summary>
     [JsonPropertyName("additionalContext")]
     public string? AdditionalContext { get; init; }
+}
+
+/// <summary>
+/// Input data for notification hooks.
+/// </summary>
+public sealed record NotificationHookInput : HookInput
+{
+    [JsonPropertyName("hook_event_name")]
+    public string HookEventName => "Notification";
+
+    [JsonPropertyName("message")]
+    public required string Message { get; init; }
+
+    [JsonPropertyName("title")]
+    public string? Title { get; init; }
+
+    [JsonPropertyName("notification_type")]
+    public required string NotificationType { get; init; }
+}
+
+/// <summary>
+/// Input data for subagent start hooks.
+/// </summary>
+public sealed record SubagentStartHookInput : HookInput
+{
+    [JsonPropertyName("hook_event_name")]
+    public string HookEventName => "SubagentStart";
+
+    [JsonPropertyName("agent_id")]
+    public required string AgentId { get; init; }
+
+    [JsonPropertyName("agent_type")]
+    public required string AgentType { get; init; }
+}
+
+/// <summary>
+/// Input data for permission request hooks.
+/// </summary>
+public sealed record PermissionRequestHookInput : HookInput
+{
+    [JsonPropertyName("hook_event_name")]
+    public string HookEventName => "PermissionRequest";
+
+    [JsonPropertyName("tool_name")]
+    public required string ToolName { get; init; }
+
+    [JsonPropertyName("tool_input")]
+    public required JsonElement ToolInput { get; init; }
+
+    [JsonPropertyName("permission_suggestions")]
+    public JsonElement? PermissionSuggestions { get; init; }
+}
+
+/// <summary>
+/// Hook-specific output for notification hooks.
+/// </summary>
+public sealed record NotificationHookSpecificOutput
+{
+    [JsonPropertyName("hookEventName")]
+    public string HookEventName => "Notification";
+
+    [JsonPropertyName("additionalContext")]
+    public string? AdditionalContext { get; init; }
+}
+
+/// <summary>
+/// Hook-specific output for subagent start hooks.
+/// </summary>
+public sealed record SubagentStartHookSpecificOutput
+{
+    [JsonPropertyName("hookEventName")]
+    public string HookEventName => "SubagentStart";
+
+    [JsonPropertyName("additionalContext")]
+    public string? AdditionalContext { get; init; }
+}
+
+/// <summary>
+/// Hook-specific output for permission request hooks.
+/// </summary>
+public sealed record PermissionRequestHookSpecificOutput
+{
+    [JsonPropertyName("hookEventName")]
+    public string HookEventName => "PermissionRequest";
+
+    [JsonPropertyName("decision")]
+    public JsonElement? Decision { get; init; }
 }

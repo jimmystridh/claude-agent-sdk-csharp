@@ -17,6 +17,7 @@ public sealed class QueryHandler : IAsyncDisposable
     private readonly CanUseToolCallback? _canUseTool;
     private readonly Dictionary<string, List<HookMatcherConfig>> _hooks;
     private readonly Dictionary<string, ISdkMcpServer> _sdkMcpServers;
+    private readonly Dictionary<string, object>? _agents;
     private readonly double _initializeTimeout;
     private readonly ILogger _logger;
 
@@ -40,6 +41,7 @@ public sealed class QueryHandler : IAsyncDisposable
         CanUseToolCallback? canUseTool = null,
         Dictionary<string, List<HookMatcherConfig>>? hooks = null,
         Dictionary<string, ISdkMcpServer>? sdkMcpServers = null,
+        Dictionary<string, object>? agents = null,
         double initializeTimeout = 60.0,
         ILogger<QueryHandler>? logger = null)
     {
@@ -48,6 +50,7 @@ public sealed class QueryHandler : IAsyncDisposable
         _canUseTool = canUseTool;
         _hooks = hooks ?? new Dictionary<string, List<HookMatcherConfig>>();
         _sdkMcpServers = sdkMcpServers ?? new Dictionary<string, ISdkMcpServer>();
+        _agents = agents;
         _initializeTimeout = initializeTimeout;
         _logger = logger ?? NullLogger<QueryHandler>.Instance;
 
@@ -111,7 +114,8 @@ public sealed class QueryHandler : IAsyncDisposable
         var request = new Dictionary<string, object?>
         {
             ["subtype"] = "initialize",
-            ["hooks"] = hooksConfig.Count > 0 ? hooksConfig : null
+            ["hooks"] = hooksConfig.Count > 0 ? hooksConfig : null,
+            ["agents"] = _agents
         };
 
         var response = await SendControlRequestAsync(request, _initializeTimeout, cancellationToken);
@@ -433,7 +437,8 @@ public sealed class QueryHandler : IAsyncDisposable
                     Cwd = inputEl.GetProperty("cwd").GetString() ?? "",
                     PermissionMode = inputEl.TryGetProperty("permission_mode", out var pm) ? pm.GetString() : null,
                     ToolName = inputEl.GetProperty("tool_name").GetString() ?? "",
-                    ToolInput = inputEl.GetProperty("tool_input")
+                    ToolInput = inputEl.GetProperty("tool_input"),
+                    ToolUseId = inputEl.TryGetProperty("tool_use_id", out var ptuId) ? ptuId.GetString() : null
                 };
                 break;
 
@@ -446,7 +451,8 @@ public sealed class QueryHandler : IAsyncDisposable
                     PermissionMode = inputEl.TryGetProperty("permission_mode", out var pm2) ? pm2.GetString() : null,
                     ToolName = inputEl.GetProperty("tool_name").GetString() ?? "",
                     ToolInput = inputEl.GetProperty("tool_input"),
-                    ToolResponse = inputEl.GetProperty("tool_response")
+                    ToolResponse = inputEl.GetProperty("tool_response"),
+                    ToolUseId = inputEl.TryGetProperty("tool_use_id", out var potuId) ? potuId.GetString() : null
                 };
                 break;
 
@@ -496,7 +502,10 @@ public sealed class QueryHandler : IAsyncDisposable
                     TranscriptPath = inputEl.GetProperty("transcript_path").GetString() ?? "",
                     Cwd = inputEl.GetProperty("cwd").GetString() ?? "",
                     PermissionMode = inputEl.TryGetProperty("permission_mode", out var pm5) ? pm5.GetString() : null,
-                    StopHookActive = inputEl.GetProperty("stop_hook_active").GetBoolean()
+                    StopHookActive = inputEl.GetProperty("stop_hook_active").GetBoolean(),
+                    AgentId = inputEl.TryGetProperty("agent_id", out var saId) ? saId.GetString() : null,
+                    AgentTranscriptPath = inputEl.TryGetProperty("agent_transcript_path", out var satp) ? satp.GetString() : null,
+                    AgentType = inputEl.TryGetProperty("agent_type", out var saType) ? saType.GetString() : null
                 };
                 break;
 
@@ -509,6 +518,44 @@ public sealed class QueryHandler : IAsyncDisposable
                     PermissionMode = inputEl.TryGetProperty("permission_mode", out var pm6) ? pm6.GetString() : null,
                     Trigger = inputEl.GetProperty("trigger").GetString() ?? "",
                     CustomInstructions = inputEl.TryGetProperty("custom_instructions", out var ci) ? ci.GetString() : null
+                };
+                break;
+
+            case "Notification":
+                hookInput = new NotificationHookInput
+                {
+                    SessionId = inputEl.GetProperty("session_id").GetString() ?? "",
+                    TranscriptPath = inputEl.GetProperty("transcript_path").GetString() ?? "",
+                    Cwd = inputEl.GetProperty("cwd").GetString() ?? "",
+                    PermissionMode = inputEl.TryGetProperty("permission_mode", out var pm7) ? pm7.GetString() : null,
+                    Message = inputEl.GetProperty("message").GetString() ?? "",
+                    Title = inputEl.TryGetProperty("title", out var titleEl) ? titleEl.GetString() : null,
+                    NotificationType = inputEl.GetProperty("notification_type").GetString() ?? ""
+                };
+                break;
+
+            case "SubagentStart":
+                hookInput = new SubagentStartHookInput
+                {
+                    SessionId = inputEl.GetProperty("session_id").GetString() ?? "",
+                    TranscriptPath = inputEl.GetProperty("transcript_path").GetString() ?? "",
+                    Cwd = inputEl.GetProperty("cwd").GetString() ?? "",
+                    PermissionMode = inputEl.TryGetProperty("permission_mode", out var pm8) ? pm8.GetString() : null,
+                    AgentId = inputEl.GetProperty("agent_id").GetString() ?? "",
+                    AgentType = inputEl.GetProperty("agent_type").GetString() ?? ""
+                };
+                break;
+
+            case "PermissionRequest":
+                hookInput = new PermissionRequestHookInput
+                {
+                    SessionId = inputEl.GetProperty("session_id").GetString() ?? "",
+                    TranscriptPath = inputEl.GetProperty("transcript_path").GetString() ?? "",
+                    Cwd = inputEl.GetProperty("cwd").GetString() ?? "",
+                    PermissionMode = inputEl.TryGetProperty("permission_mode", out var pm9) ? pm9.GetString() : null,
+                    ToolName = inputEl.GetProperty("tool_name").GetString() ?? "",
+                    ToolInput = inputEl.GetProperty("tool_input"),
+                    PermissionSuggestions = inputEl.TryGetProperty("permission_suggestions", out var permSug) ? permSug : null
                 };
                 break;
 
@@ -563,11 +610,29 @@ public sealed class QueryHandler : IAsyncDisposable
                     var tools = await server.ListToolsAsync(cancellationToken);
                     result = new
                     {
-                        tools = tools.Select(t => new
+                        tools = tools.Select(t =>
                         {
-                            name = t.Name,
-                            description = t.Description,
-                            inputSchema = t.InputSchema
+                            var toolDict = new Dictionary<string, object>
+                            {
+                                ["name"] = t.Name,
+                                ["description"] = t.Description,
+                                ["inputSchema"] = t.InputSchema
+                            };
+                            if (t.Annotations != null)
+                            {
+                                var annotations = new Dictionary<string, object>();
+                                if (t.Annotations.ReadOnlyHint.HasValue)
+                                    annotations["readOnlyHint"] = t.Annotations.ReadOnlyHint.Value;
+                                if (t.Annotations.DestructiveHint.HasValue)
+                                    annotations["destructiveHint"] = t.Annotations.DestructiveHint.Value;
+                                if (t.Annotations.IdempotentHint.HasValue)
+                                    annotations["idempotentHint"] = t.Annotations.IdempotentHint.Value;
+                                if (t.Annotations.OpenWorldHint.HasValue)
+                                    annotations["openWorldHint"] = t.Annotations.OpenWorldHint.Value;
+                                if (annotations.Count > 0)
+                                    toolDict["annotations"] = annotations;
+                            }
+                            return toolDict;
                         }).ToList()
                     };
                     break;

@@ -83,7 +83,7 @@ public static class MessageParser
             : null;
 
         AssistantMessageErrorType? error = null;
-        if (messageEl.TryGetProperty("error", out var errorEl) && errorEl.ValueKind == JsonValueKind.String)
+        if (data.TryGetProperty("error", out var errorEl) && errorEl.ValueKind == JsonValueKind.String)
         {
             var errorStr = errorEl.GetString();
             error = errorStr switch
