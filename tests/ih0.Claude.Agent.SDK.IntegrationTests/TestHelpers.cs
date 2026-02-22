@@ -1,10 +1,22 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ih0.Claude.Agent.SDK;
 using ih0.Claude.Agent.SDK.Types;
 using OneOf;
 
 namespace ih0.Claude.Agent.SDK.IntegrationTests;
+
+internal static class ModuleInit
+{
+    [ModuleInitializer]
+    internal static void Init()
+    {
+        // Clear CLAUDECODE so the CLI subprocess doesn't refuse to start
+        // with "nested sessions" when integration tests run inside Claude Code.
+        Environment.SetEnvironmentVariable("CLAUDECODE", null);
+    }
+}
 
 public static class TestHelpers
 {
