@@ -208,6 +208,7 @@ public class ExtendedClientTests
             options.FallbackModel.Should().Be("sonnet");
         }
 
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
         [Fact]
         public void MaxThinkingTokens_Configuration()
         {
@@ -217,6 +218,7 @@ public class ExtendedClientTests
 
             options.MaxThinkingTokens.Should().Be(5000);
         }
+#pragma warning restore CS0618
     }
 
     public class DirectoryAndPathConfigurationTests

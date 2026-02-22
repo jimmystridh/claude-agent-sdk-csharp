@@ -6,7 +6,7 @@ namespace ih0.Claude.Agent.SDK.Internal;
 
 public static class MessageParser
 {
-    public static Message Parse(JsonElement data)
+    public static Message? Parse(JsonElement data)
     {
         if (data.ValueKind != JsonValueKind.Object)
         {
@@ -28,7 +28,7 @@ public static class MessageParser
             "system" => ParseSystemMessage(data),
             "result" => ParseResultMessage(data),
             "stream_event" => ParseStreamEvent(data),
-            _ => throw new MessageParseException($"Unknown message type: {type}", data)
+            _ => null
         };
     }
 

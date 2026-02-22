@@ -172,7 +172,9 @@ public sealed class ClaudeAgentService : IClaudeAgentService
                 }
             }
         }
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
         if (overrides.MaxThinkingTokens != null) builder.WithMaxThinkingTokens(overrides.MaxThinkingTokens.Value);
+#pragma warning restore CS0618
         if (overrides.EnableFileCheckpointing != null) builder.WithFileCheckpointing(overrides.EnableFileCheckpointing.Value);
         if (overrides.IncludePartialMessages != null) builder.WithIncludePartialMessages(overrides.IncludePartialMessages.Value);
         if (overrides.User != null) builder.WithUser(overrides.User);

@@ -21,7 +21,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<UserMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<UserMessage>();
         var userMessage = (UserMessage)message;
         userMessage.Content.IsT1.Should().BeTrue();
         var blocks = userMessage.Content.AsT1;
@@ -43,7 +44,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<UserMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<UserMessage>();
         var userMessage = (UserMessage)message;
         userMessage.Uuid.Should().Be("msg-abc123-def456");
     }
@@ -70,7 +72,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<UserMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<UserMessage>();
         var userMessage = (UserMessage)message;
         userMessage.Content.IsT1.Should().BeTrue();
         var blocks = userMessage.Content.AsT1;
@@ -102,7 +105,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<UserMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<UserMessage>();
         var userMessage = (UserMessage)message;
         userMessage.Content.IsT1.Should().BeTrue();
         var blocks = userMessage.Content.AsT1;
@@ -133,7 +137,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<UserMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<UserMessage>();
         var userMessage = (UserMessage)message;
         var blocks = userMessage.Content.AsT1;
         var toolResult = (ToolResultBlock)blocks[0];
@@ -159,7 +164,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<UserMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<UserMessage>();
         var userMessage = (UserMessage)message;
         var blocks = userMessage.Content.AsT1;
         blocks.Should().HaveCount(4);
@@ -182,7 +188,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<UserMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<UserMessage>();
         var userMessage = (UserMessage)message;
         userMessage.ParentToolUseId.Should().Be("toolu_01Xrwd5Y13sEHtzScxR77So8");
     }
@@ -205,7 +212,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<AssistantMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<AssistantMessage>();
         var assistantMessage = (AssistantMessage)message;
         assistantMessage.Content.Should().HaveCount(2);
         assistantMessage.Content[0].Should().BeOfType<TextBlock>();
@@ -234,7 +242,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<AssistantMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<AssistantMessage>();
         var assistantMessage = (AssistantMessage)message;
         assistantMessage.Content.Should().HaveCount(2);
         assistantMessage.Content[0].Should().BeOfType<ThinkingBlock>();
@@ -254,7 +263,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<SystemMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<SystemMessage>();
         var systemMessage = (SystemMessage)message;
         systemMessage.Subtype.Should().Be("start");
     }
@@ -278,7 +288,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<AssistantMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<AssistantMessage>();
         var assistantMessage = (AssistantMessage)message;
         assistantMessage.ParentToolUseId.Should().Be("toolu_01Xrwd5Y13sEHtzScxR77So8");
     }
@@ -300,7 +311,8 @@ public class MessageParserTests
 
         var message = MessageParser.Parse(data);
 
-        message.Should().BeOfType<ResultMessage>();
+        message.Should().NotBeNull();
+        message!.Should().BeOfType<ResultMessage>();
         var resultMessage = (ResultMessage)message;
         resultMessage.Subtype.Should().Be("success");
     }
@@ -328,14 +340,13 @@ public class MessageParserTests
     }
 
     [Fact]
-    public void Parse_UnknownMessageType_ThrowsMessageParseException()
+    public void Parse_UnknownMessageType_ReturnsNull()
     {
         var data = JsonDocument.Parse("""{"type": "unknown_type"}""").RootElement;
 
-        var action = () => MessageParser.Parse(data);
+        var result = MessageParser.Parse(data);
 
-        action.Should().Throw<MessageParseException>()
-            .WithMessage("*Unknown message type: unknown_type*");
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -383,20 +394,12 @@ public class MessageParserTests
     }
 
     [Fact]
-    public void Parse_MessageParseError_ContainsData()
+    public void Parse_UnknownMessageType_ReturnsNull_ForwardCompat()
     {
-        var data = JsonDocument.Parse("""{"type": "unknown", "some": "data"}""").RootElement;
+        var data = JsonDocument.Parse("""{"type": "rate_limit_event", "retry_after_ms": 5000}""").RootElement;
 
-        try
-        {
-            MessageParser.Parse(data);
-            Assert.Fail("Expected MessageParseException");
-        }
-        catch (MessageParseException ex)
-        {
-            ex.MessageData.Should().NotBeNull();
-            ex.MessageData!.Value.TryGetProperty("type", out var typeEl).Should().BeTrue();
-            typeEl.GetString().Should().Be("unknown");
-        }
+        var result = MessageParser.Parse(data);
+
+        result.Should().BeNull();
     }
 }

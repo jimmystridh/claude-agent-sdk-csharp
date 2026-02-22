@@ -238,7 +238,9 @@ public sealed class ClaudeAgentClient : IAsyncDisposable
 
         await foreach (var message in _queryHandler.ReceiveMessagesAsync(cancellationToken))
         {
-            yield return MessageParser.Parse(message);
+            var parsed = MessageParser.Parse(message);
+            if (parsed != null)
+                yield return parsed;
         }
     }
 

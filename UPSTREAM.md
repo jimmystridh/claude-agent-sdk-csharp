@@ -8,6 +8,6 @@ Upstream (source of truth):
 - Based on repo start date (2026-01-03) and upstream release dates, the likely initial baseline was around **v0.1.17**.
 
 ## Last checked
-- Upstream release: v0.1.33 (2026-02-08)
-- Changes ported: v0.1.28 (error field fix), v0.1.29 (new hook events), v0.1.31 (MCP annotations + agents via initialize)
-- Skipped (CLI-only version bumps): v0.1.27, v0.1.30, v0.1.32, v0.1.33
+- Upstream release: v0.1.39 (2026-02-19)
+- Changes ported: v0.1.36 (extended thinking config + effort), v0.1.39 (unknown message type handling)
+- Skipped (CLI-only version bumps): v0.1.34, v0.1.35, v0.1.37, v0.1.38

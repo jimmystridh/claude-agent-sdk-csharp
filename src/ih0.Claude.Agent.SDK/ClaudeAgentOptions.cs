@@ -151,7 +151,18 @@ public sealed record ClaudeAgentOptions
     /// <summary>
     /// Maximum tokens for extended thinking.
     /// </summary>
+    [Obsolete("Use Thinking instead.")]
     public int? MaxThinkingTokens { get; init; }
+
+    /// <summary>
+    /// Thinking configuration for extended thinking. Takes precedence over <c>MaxThinkingTokens</c>.
+    /// </summary>
+    public ThinkingConfig? Thinking { get; init; }
+
+    /// <summary>
+    /// Effort level for the model (e.g., "low", "medium", "high").
+    /// </summary>
+    public string? Effort { get; init; }
 
     /// <summary>
     /// Whether to enable file checkpointing for undo support.

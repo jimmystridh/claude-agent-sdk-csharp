@@ -88,7 +88,9 @@ internal class ConfigurationOptions
     public Dictionary<string, string>? Env { get; set; }
     public List<string>? AddDirs { get; set; }
     public List<string>? Betas { get; set; }
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
     public int? MaxThinkingTokens { get; set; }
+#pragma warning restore CS0618
     public bool? EnableFileCheckpointing { get; set; }
     public bool? IncludePartialMessages { get; set; }
     public string? User { get; set; }
@@ -154,7 +156,9 @@ internal class ConfigurationOptions
             }
         }
 
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
         if (MaxThinkingTokens != null) builder.WithMaxThinkingTokens(MaxThinkingTokens.Value);
+#pragma warning restore CS0618
         if (EnableFileCheckpointing != null) builder.WithFileCheckpointing(EnableFileCheckpointing.Value);
         if (IncludePartialMessages != null) builder.WithIncludePartialMessages(IncludePartialMessages.Value);
         if (User != null) builder.WithUser(User);

@@ -180,6 +180,7 @@ public class BuilderTests
         Assert.Contains("feature1", options.Betas);
     }
 
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
     [Fact]
     public void Builder_SetsMaxThinkingTokens()
     {
@@ -189,6 +190,7 @@ public class BuilderTests
 
         Assert.Equal(1000, options.MaxThinkingTokens);
     }
+#pragma warning restore CS0618
 
     [Fact]
     public void Builder_SetsFileCheckpointing()
@@ -380,5 +382,44 @@ public class BuilderTests
 
         Assert.NotNull(copy.Env);
         Assert.Equal("value", copy.Env["KEY"]);
+    }
+
+    [Fact]
+    public void Builder_SetsThinking()
+    {
+        var options = new ClaudeAgentOptionsBuilder()
+            .WithThinking(new ThinkingConfigAdaptive { BudgetTokens = 16000 })
+            .Build();
+
+        Assert.NotNull(options.Thinking);
+        var adaptive = Assert.IsType<ThinkingConfigAdaptive>(options.Thinking);
+        Assert.Equal(16000, adaptive.BudgetTokens);
+    }
+
+    [Fact]
+    public void Builder_SetsEffort()
+    {
+        var options = new ClaudeAgentOptionsBuilder()
+            .WithEffort("high")
+            .Build();
+
+        Assert.Equal("high", options.Effort);
+    }
+
+    [Fact]
+    public void Builder_ToBuilder_PreservesThinking()
+    {
+        var original = new ClaudeAgentOptions
+        {
+            Thinking = new ThinkingConfigEnabled { BudgetTokens = 10000 },
+            Effort = "medium"
+        };
+
+        var copy = original.ToBuilder().Build();
+
+        Assert.NotNull(copy.Thinking);
+        var enabled = Assert.IsType<ThinkingConfigEnabled>(copy.Thinking);
+        Assert.Equal(10000, enabled.BudgetTokens);
+        Assert.Equal("medium", copy.Effort);
     }
 }

@@ -46,6 +46,8 @@ public sealed class ClaudeAgentOptionsBuilder
     private string? _permissionPromptToolName;
     private List<string>? _betas;
     private int? _maxThinkingTokens;
+    private ThinkingConfig? _thinking;
+    private string? _effort;
     private bool? _enableFileCheckpointing;
     private SandboxSettings? _sandbox;
     private JsonElement? _outputFormat;
@@ -430,9 +432,32 @@ public sealed class ClaudeAgentOptionsBuilder
     /// </summary>
     /// <param name="tokens">The maximum tokens.</param>
     /// <returns>This builder for chaining.</returns>
+    [Obsolete("Use WithThinking instead.")]
     public ClaudeAgentOptionsBuilder WithMaxThinkingTokens(int tokens)
     {
         _maxThinkingTokens = tokens;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the thinking configuration.
+    /// </summary>
+    /// <param name="thinking">The thinking configuration.</param>
+    /// <returns>This builder for chaining.</returns>
+    public ClaudeAgentOptionsBuilder WithThinking(ThinkingConfig thinking)
+    {
+        _thinking = thinking;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the effort level.
+    /// </summary>
+    /// <param name="effort">The effort level (e.g., "low", "medium", "high").</param>
+    /// <returns>This builder for chaining.</returns>
+    public ClaudeAgentOptionsBuilder WithEffort(string effort)
+    {
+        _effort = effort;
         return this;
     }
 
@@ -553,6 +578,7 @@ public sealed class ClaudeAgentOptionsBuilder
             mcpServers = OneOf<IReadOnlyDictionary<string, McpServerConfig>, string>.FromT0(_mcpServerDict);
         }
 
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
         return new ClaudeAgentOptions
         {
             Tools = _tools,
@@ -581,6 +607,8 @@ public sealed class ClaudeAgentOptionsBuilder
             PermissionPromptToolName = _permissionPromptToolName,
             Betas = _betas?.ToArray(),
             MaxThinkingTokens = _maxThinkingTokens,
+            Thinking = _thinking,
+            Effort = _effort,
             EnableFileCheckpointing = _enableFileCheckpointing,
             Sandbox = _sandbox,
             OutputFormat = _outputFormat,
@@ -592,6 +620,7 @@ public sealed class ClaudeAgentOptionsBuilder
             Plugins = _plugins?.ToArray(),
             ExtraArgs = _extraArgs
         };
+#pragma warning restore CS0618
     }
 }
 
@@ -697,8 +726,16 @@ public static class ClaudeAgentOptionsExtensions
                 builder.AddBeta(beta);
         }
 
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
         if (options.MaxThinkingTokens.HasValue)
             builder.WithMaxThinkingTokens(options.MaxThinkingTokens.Value);
+#pragma warning restore CS0618
+
+        if (options.Thinking != null)
+            builder.WithThinking(options.Thinking);
+
+        if (options.Effort != null)
+            builder.WithEffort(options.Effort);
 
         if (options.EnableFileCheckpointing.HasValue)
             builder.WithFileCheckpointing(options.EnableFileCheckpointing.Value);

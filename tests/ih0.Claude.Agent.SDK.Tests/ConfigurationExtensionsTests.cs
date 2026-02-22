@@ -201,6 +201,7 @@ public class ConfigurationExtensionsTests
         Assert.Contains("feature1", options.Betas);
     }
 
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
     [Fact]
     public void GetClaudeAgentOptions_ReadsMaxThinkingTokens()
     {
@@ -213,6 +214,7 @@ public class ConfigurationExtensionsTests
 
         Assert.Equal(2000, options.MaxThinkingTokens);
     }
+#pragma warning restore CS0618
 
     [Fact]
     public void GetClaudeAgentOptions_ReadsEnableFileCheckpointing()

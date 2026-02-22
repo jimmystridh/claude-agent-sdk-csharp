@@ -28,7 +28,8 @@ public class ExtendedMessageParserTests
 
             var msg = MessageParser.Parse(raw);
 
-            msg.Should().BeOfType<UserMessage>();
+            msg.Should().NotBeNull();
+            msg!.Should().BeOfType<UserMessage>();
             var user = (UserMessage)msg;
             user.Content.IsT0.Should().BeTrue();
             user.Content.AsT0.Should().Be("Hello, Claude!");
@@ -47,7 +48,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var user = (UserMessage)msg;
             user.Uuid.Should().Be("user_123");
         }
@@ -67,7 +68,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var user = (UserMessage)msg;
             user.Content.IsT1.Should().BeTrue();
             user.Content.AsT1.Should().HaveCount(2);
@@ -93,7 +94,8 @@ public class ExtendedMessageParserTests
 
             var msg = MessageParser.Parse(raw);
 
-            msg.Should().BeOfType<AssistantMessage>();
+            msg.Should().NotBeNull();
+            msg!.Should().BeOfType<AssistantMessage>();
             var asst = (AssistantMessage)msg;
             var textBlock = asst.Content[0] as TextBlock;
             textBlock!.Text.Should().Be("Hello, I'm Claude!");
@@ -121,7 +123,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var asst = (AssistantMessage)msg;
 
             asst.Content.Should().HaveCount(2);
@@ -150,7 +152,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var asst = (AssistantMessage)msg;
 
             asst.Content.Should().HaveCount(2);
@@ -173,7 +175,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var asst = (AssistantMessage)msg;
             asst.Error.Should().Be(AssistantMessageErrorType.RateLimit);
         }
@@ -192,7 +194,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var asst = (AssistantMessage)msg;
             asst.Error.Should().Be(AssistantMessageErrorType.AuthenticationFailed);
         }
@@ -211,7 +213,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var asst = (AssistantMessage)msg;
             asst.Error.Should().Be(AssistantMessageErrorType.Unknown);
         }
@@ -229,7 +231,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var asst = (AssistantMessage)msg;
             asst.Error.Should().BeNull();
         }
@@ -250,7 +252,8 @@ public class ExtendedMessageParserTests
 
             var msg = MessageParser.Parse(raw);
 
-            msg.Should().BeOfType<SystemMessage>();
+            msg.Should().NotBeNull();
+            msg!.Should().BeOfType<SystemMessage>();
             var sys = (SystemMessage)msg;
             sys.Subtype.Should().Be("init");
             sys.Data.GetProperty("session_id").GetString().Should().Be("sess_123");
@@ -282,7 +285,8 @@ public class ExtendedMessageParserTests
 
             var msg = MessageParser.Parse(raw);
 
-            msg.Should().BeOfType<ResultMessage>();
+            msg.Should().NotBeNull();
+            msg!.Should().BeOfType<ResultMessage>();
             var result = (ResultMessage)msg;
             result.Subtype.Should().Be("success");
             result.DurationMs.Should().Be(1500);
@@ -315,7 +319,8 @@ public class ExtendedMessageParserTests
 
             var msg = MessageParser.Parse(raw);
 
-            msg.Should().BeOfType<StreamEvent>();
+            msg.Should().NotBeNull();
+            msg!.Should().BeOfType<StreamEvent>();
             var evt = (StreamEvent)msg;
             evt.Uuid.Should().Be("evt_123");
             evt.SessionId.Should().Be("sess_456");
@@ -345,7 +350,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var asst = (AssistantMessage)msg;
             var toolResult = asst.Content[0] as ToolResultBlock;
 
@@ -358,7 +363,7 @@ public class ExtendedMessageParserTests
     public class ErrorHandlingTests
     {
         [Fact]
-        public void ParseUnknownMessageType_ThrowsException()
+        public void ParseUnknownMessageType_ReturnsNull()
         {
             var raw = JsonDocument.Parse("""
             {
@@ -367,8 +372,8 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var act = () => MessageParser.Parse(raw);
-            act.Should().Throw<MessageParseException>();
+            var result = MessageParser.Parse(raw);
+            result.Should().BeNull();
         }
 
         [Fact]
@@ -413,7 +418,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var user = (UserMessage)msg;
             user.Content.IsT0.Should().BeTrue();
             user.Content.AsT0.Should().BeEmpty();
@@ -437,7 +442,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var result = (ResultMessage)msg;
             result.TotalCostUsd.Should().BeNull();
             result.Usage.Should().BeNull();
@@ -456,7 +461,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var user = (UserMessage)msg;
             user.Content.AsT0.Should().Be("你好世界 🌍 مرحبا");
         }
@@ -480,7 +485,7 @@ public class ExtendedMessageParserTests
             }
             """).RootElement;
 
-            var msg = MessageParser.Parse(raw);
+            var msg = MessageParser.Parse(raw)!;
             var result = (ResultMessage)msg;
             result.Usage!.Value.GetProperty("input_tokens").GetInt32().Should().Be(1000000);
             result.Usage!.Value.GetProperty("output_tokens").GetInt32().Should().Be(500000);

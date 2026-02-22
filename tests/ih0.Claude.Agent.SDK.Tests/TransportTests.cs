@@ -13,6 +13,7 @@ public class TransportTests
 {
     private const string DefaultCliPath = "/usr/bin/claude";
 
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
     private static ClaudeAgentOptions MakeOptions(
         string? cliPath = null,
         string[]? allowedTools = null,
@@ -22,6 +23,8 @@ public class TransportTests
         PermissionMode? permissionMode = null,
         int? maxTurns = null,
         int? maxThinkingTokens = null,
+        ThinkingConfig? thinking = null,
+        string? effort = null,
         string[]? addDirs = null,
         bool continueConversation = false,
         string? resume = null,
@@ -42,6 +45,8 @@ public class TransportTests
             PermissionMode = permissionMode,
             MaxTurns = maxTurns,
             MaxThinkingTokens = maxThinkingTokens,
+            Thinking = thinking,
+            Effort = effort,
             AddDirs = addDirs,
             ContinueConversation = continueConversation,
             Resume = resume,
@@ -53,6 +58,7 @@ public class TransportTests
             SystemPrompt = systemPrompt
         };
     }
+#pragma warning restore CS0618
 
     public class CommandBuildingTests
     {
@@ -176,6 +182,107 @@ public class TransportTests
 
             cmd.Should().Contain("--max-thinking-tokens");
             cmd.Should().Contain("5000");
+        }
+
+        [Fact]
+        public void BuildCommand_WithThinkingAdaptive_WithBudget()
+        {
+            var prompt = OneOf<string, IAsyncEnumerable<JsonElement>>.FromT0("test");
+            var transport = new SubprocessCliTransport(prompt, MakeOptions(
+                thinking: new ThinkingConfigAdaptive { BudgetTokens = 16000 }
+            ));
+
+            var cmd = transport.BuildCommand();
+
+            cmd.Should().Contain("--max-thinking-tokens");
+            cmd.Should().Contain("16000");
+        }
+
+        [Fact]
+        public void BuildCommand_WithThinkingAdaptive_WithoutBudget_DefaultsTo32000()
+        {
+            var prompt = OneOf<string, IAsyncEnumerable<JsonElement>>.FromT0("test");
+            var transport = new SubprocessCliTransport(prompt, MakeOptions(
+                thinking: new ThinkingConfigAdaptive()
+            ));
+
+            var cmd = transport.BuildCommand();
+
+            cmd.Should().Contain("--max-thinking-tokens");
+            cmd.Should().Contain("32000");
+        }
+
+        [Fact]
+        public void BuildCommand_WithThinkingAdaptive_FallsBackToLegacyMaxThinkingTokens()
+        {
+            var prompt = OneOf<string, IAsyncEnumerable<JsonElement>>.FromT0("test");
+            var transport = new SubprocessCliTransport(prompt, MakeOptions(
+                maxThinkingTokens: 8000,
+                thinking: new ThinkingConfigAdaptive()
+            ));
+
+            var cmd = transport.BuildCommand();
+
+            cmd.Should().Contain("--max-thinking-tokens");
+            cmd.Should().Contain("8000");
+        }
+
+        [Fact]
+        public void BuildCommand_WithThinkingEnabled()
+        {
+            var prompt = OneOf<string, IAsyncEnumerable<JsonElement>>.FromT0("test");
+            var transport = new SubprocessCliTransport(prompt, MakeOptions(
+                thinking: new ThinkingConfigEnabled { BudgetTokens = 10000 }
+            ));
+
+            var cmd = transport.BuildCommand();
+
+            cmd.Should().Contain("--max-thinking-tokens");
+            cmd.Should().Contain("10000");
+        }
+
+        [Fact]
+        public void BuildCommand_WithThinkingDisabled()
+        {
+            var prompt = OneOf<string, IAsyncEnumerable<JsonElement>>.FromT0("test");
+            var transport = new SubprocessCliTransport(prompt, MakeOptions(
+                thinking: new ThinkingConfigDisabled()
+            ));
+
+            var cmd = transport.BuildCommand();
+
+            cmd.Should().Contain("--max-thinking-tokens");
+            cmd.Should().Contain("0");
+        }
+
+        [Fact]
+        public void BuildCommand_ThinkingTakesPrecedenceOverMaxThinkingTokens()
+        {
+            var prompt = OneOf<string, IAsyncEnumerable<JsonElement>>.FromT0("test");
+            var transport = new SubprocessCliTransport(prompt, MakeOptions(
+                maxThinkingTokens: 5000,
+                thinking: new ThinkingConfigEnabled { BudgetTokens = 20000 }
+            ));
+
+            var cmd = transport.BuildCommand();
+
+            cmd.Should().Contain("--max-thinking-tokens");
+            cmd.Should().Contain("20000");
+            cmd.Should().NotContain("5000");
+        }
+
+        [Fact]
+        public void BuildCommand_WithEffort()
+        {
+            var prompt = OneOf<string, IAsyncEnumerable<JsonElement>>.FromT0("test");
+            var transport = new SubprocessCliTransport(prompt, MakeOptions(
+                effort: "high"
+            ));
+
+            var cmd = transport.BuildCommand();
+
+            cmd.Should().Contain("--effort");
+            cmd.Should().Contain("high");
         }
 
         [Fact]

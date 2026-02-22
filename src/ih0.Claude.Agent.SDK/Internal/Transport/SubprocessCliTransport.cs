@@ -275,8 +275,10 @@ public sealed class SubprocessCliTransport : ITransport
             }
         }
 
-        if (_options.MaxThinkingTokens.HasValue)
-            cmd.AddRange(new[] { "--max-thinking-tokens", _options.MaxThinkingTokens.Value.ToString() });
+        ResolveThinkingConfig(cmd);
+
+        if (_options.Effort != null)
+            cmd.AddRange(new[] { "--effort", _options.Effort });
 
         if (_options.OutputFormat.HasValue)
         {
@@ -293,6 +295,44 @@ public sealed class SubprocessCliTransport : ITransport
 
         return cmd;
     }
+
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
+    private void ResolveThinkingConfig(List<string> cmd)
+    {
+        if (_options.Thinking != null)
+        {
+            switch (_options.Thinking)
+            {
+                case ThinkingConfigAdaptive adaptive:
+                    if (adaptive.BudgetTokens.HasValue)
+                    {
+                        cmd.AddRange(new[] { "--max-thinking-tokens", adaptive.BudgetTokens.Value.ToString() });
+                    }
+                    else if (_options.MaxThinkingTokens.HasValue)
+                    {
+                        cmd.AddRange(new[] { "--max-thinking-tokens", _options.MaxThinkingTokens.Value.ToString() });
+                    }
+                    else
+                    {
+                        cmd.AddRange(new[] { "--max-thinking-tokens", "32000" });
+                    }
+                    break;
+
+                case ThinkingConfigEnabled enabled:
+                    cmd.AddRange(new[] { "--max-thinking-tokens", enabled.BudgetTokens.ToString() });
+                    break;
+
+                case ThinkingConfigDisabled:
+                    cmd.AddRange(new[] { "--max-thinking-tokens", "0" });
+                    break;
+            }
+        }
+        else if (_options.MaxThinkingTokens.HasValue)
+        {
+            cmd.AddRange(new[] { "--max-thinking-tokens", _options.MaxThinkingTokens.Value.ToString() });
+        }
+    }
+#pragma warning restore CS0618
 
     private string? BuildSettingsValue()
     {

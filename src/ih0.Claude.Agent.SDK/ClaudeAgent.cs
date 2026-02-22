@@ -134,7 +134,9 @@ public static class ClaudeAgent
 
         await foreach (var message in queryHandler.ReceiveMessagesAsync(cancellationToken))
         {
-            yield return MessageParser.Parse(message);
+            var parsed = MessageParser.Parse(message);
+            if (parsed != null)
+                yield return parsed;
         }
     }
 
@@ -237,7 +239,9 @@ public static class ClaudeAgent
 
         await foreach (var message in queryHandler.ReceiveMessagesAsync(cancellationToken))
         {
-            yield return MessageParser.Parse(message);
+            var parsed = MessageParser.Parse(message);
+            if (parsed != null)
+                yield return parsed;
         }
     }
 

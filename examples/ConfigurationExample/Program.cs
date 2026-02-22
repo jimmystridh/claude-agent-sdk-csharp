@@ -22,7 +22,9 @@ Console.WriteLine($"  AllowedTools: {string.Join(", ", options.AllowedTools ?? [
 Console.WriteLine($"  DisallowedTools: {string.Join(", ", options.DisallowedTools ?? [])}");
 Console.WriteLine($"  Cwd: {options.Cwd}");
 Console.WriteLine($"  Env: {string.Join(", ", options.Env?.Select(kv => $"{kv.Key}={kv.Value}") ?? [])}");
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
 Console.WriteLine($"  MaxThinkingTokens: {options.MaxThinkingTokens}");
+#pragma warning restore CS0618
 Console.WriteLine($"  EnableFileCheckpointing: {options.EnableFileCheckpointing}");
 Console.WriteLine($"  User: {options.User}");
 Console.WriteLine();

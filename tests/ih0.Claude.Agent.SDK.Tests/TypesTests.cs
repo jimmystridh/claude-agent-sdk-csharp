@@ -1,3 +1,4 @@
+using System.Reflection;
 using ih0.Claude.Agent.SDK.Types;
 using FluentAssertions;
 using Xunit;
@@ -182,6 +183,97 @@ public class TypesTests
 
             options.Model.Should().Be("claude-sonnet-4-5");
             options.PermissionPromptToolName.Should().Be("CustomTool");
+        }
+
+        [Fact]
+        public void Options_WithThinking()
+        {
+            var options = new ClaudeAgentOptions
+            {
+                Thinking = new ThinkingConfigAdaptive { BudgetTokens = 16000 }
+            };
+
+            options.Thinking.Should().BeOfType<ThinkingConfigAdaptive>();
+            ((ThinkingConfigAdaptive)options.Thinking).BudgetTokens.Should().Be(16000);
+        }
+
+        [Fact]
+        public void Options_WithEffort()
+        {
+            var options = new ClaudeAgentOptions
+            {
+                Effort = "high"
+            };
+
+            options.Effort.Should().Be("high");
+        }
+
+#pragma warning disable CS0618 // MaxThinkingTokens is obsolete
+        [Fact]
+        public void Options_MaxThinkingTokens_HasObsoleteAttribute()
+        {
+            var property = typeof(ClaudeAgentOptions).GetProperty(nameof(ClaudeAgentOptions.MaxThinkingTokens));
+            var obsolete = property!.GetCustomAttribute<ObsoleteAttribute>();
+
+            obsolete.Should().NotBeNull();
+            obsolete!.Message.Should().Contain("Thinking");
+        }
+#pragma warning restore CS0618
+    }
+
+    public class ThinkingConfigTests
+    {
+        [Fact]
+        public void ThinkingConfigAdaptive_IsThinkingConfig()
+        {
+            ThinkingConfig config = new ThinkingConfigAdaptive { BudgetTokens = 16000 };
+
+            config.Should().BeOfType<ThinkingConfigAdaptive>();
+        }
+
+        [Fact]
+        public void ThinkingConfigEnabled_IsThinkingConfig()
+        {
+            ThinkingConfig config = new ThinkingConfigEnabled { BudgetTokens = 10000 };
+
+            config.Should().BeOfType<ThinkingConfigEnabled>();
+            ((ThinkingConfigEnabled)config).BudgetTokens.Should().Be(10000);
+        }
+
+        [Fact]
+        public void ThinkingConfigDisabled_IsThinkingConfig()
+        {
+            ThinkingConfig config = new ThinkingConfigDisabled();
+
+            config.Should().BeOfType<ThinkingConfigDisabled>();
+        }
+
+        [Fact]
+        public void ThinkingConfig_PatternMatching()
+        {
+            ThinkingConfig adaptive = new ThinkingConfigAdaptive { BudgetTokens = 5000 };
+            ThinkingConfig enabled = new ThinkingConfigEnabled { BudgetTokens = 10000 };
+            ThinkingConfig disabled = new ThinkingConfigDisabled();
+
+            Match(adaptive).Should().Be("adaptive:5000");
+            Match(enabled).Should().Be("enabled:10000");
+            Match(disabled).Should().Be("disabled");
+
+            static string Match(ThinkingConfig config) => config switch
+            {
+                ThinkingConfigAdaptive a => $"adaptive:{a.BudgetTokens}",
+                ThinkingConfigEnabled e => $"enabled:{e.BudgetTokens}",
+                ThinkingConfigDisabled => "disabled",
+                _ => "unknown"
+            };
+        }
+
+        [Fact]
+        public void ThinkingConfigAdaptive_DefaultBudgetTokens_IsNull()
+        {
+            var config = new ThinkingConfigAdaptive();
+
+            config.BudgetTokens.Should().BeNull();
         }
     }
 }
